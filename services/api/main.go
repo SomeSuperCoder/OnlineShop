@@ -19,21 +19,26 @@ func main() {
 
 	r := gin.Default()
 
-	api := humagin.New(r, huma.DefaultConfig(
+	apiGroup := r.Group("/api/v1")
+	api := humagin.NewWithGroup(r, apiGroup, huma.DefaultConfig(
 		"Online Shop Huma + Gin API",
 		"1.0.0",
 	))
 
 	orderHandler := handlers.ProductHandler{Repo: repo}
-	huma.Get(api, "/orders", orderHandler.GetAll)
-	huma.Get(api, "/orders/{id}", orderHandler.GetByID)
-	huma.Post(api, "/orders", orderHandler.Post)
-	huma.Delete(api, "/orders/{id}", orderHandler.Delete)
+	{
+		huma.Get(api, "/orders", orderHandler.GetAll)
+		huma.Get(api, "/orders/{id}", orderHandler.GetByID)
+		huma.Post(api, "/orders", orderHandler.Post)
+		huma.Delete(api, "/orders/{id}", orderHandler.Delete)
+	}
 
 	reviewHandler := handlers.ReviewHandler{Repo: repo}
-	huma.Get(api, "/orders/{id}/reviews", reviewHandler.GetFor)
-	huma.Post(api, "/orders/{id}/reviews", reviewHandler.Post)
-	huma.Delete(api, "/reviews/{id}", reviewHandler.Delete)
+	{
+		huma.Get(api, "/orders/{id}/reviews", reviewHandler.GetFor)
+		huma.Post(api, "/orders/{id}/reviews", reviewHandler.Post)
+		huma.Delete(api, "/reviews/{id}", reviewHandler.Delete)
+	}
 
 	r.Run(fmt.Sprintf(":%s", config.Port))
 }
