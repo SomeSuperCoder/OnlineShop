@@ -55,7 +55,7 @@ const verifyAuth = `-- name: VerifyAuth :one
 SELECT EXISTS (
   SELECT 1
   FROM users
-  WHERE email = $1 OR username = $1
+  WHERE email = $1
   AND password_hash = crypt($2, password_hash)
 ) AS valid
 `

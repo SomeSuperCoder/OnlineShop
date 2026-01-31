@@ -32,6 +32,7 @@ func main() {
 	authHandler := handlers.AuthHandler{Repo: repo}
 	{
 		huma.Post(api, "/auth/register", authHandler.Register)
+		huma.Post(api, "/auth/login", authHandler.Login)
 	}
 
 	orderHandler := handlers.ProductHandler{Repo: repo}
