@@ -9,7 +9,8 @@ import (
 )
 
 type AuthHandler struct {
-	Repo *repository.Queries
+	Repo   *repository.Queries
+	Config *internal.AppConfig
 }
 
 type RegisterRequest struct {
@@ -64,7 +65,7 @@ func (h *AuthHandler) Login(ctx context.Context, input *LoginRequest) (*LoginRes
 	}
 
 	// Create a new JWT token
-	jwt, err := internal.GenerateToken(input.Body.Email)
+	jwt, err := internal.GenerateToken(input.Body.Email, h.Config)
 	if err != nil {
 		return resp, err
 	}

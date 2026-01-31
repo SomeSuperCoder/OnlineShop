@@ -13,8 +13,8 @@ import (
 
 func main() {
 	ctx := context.Background()
-	config := internal.LoadAppConfig()
-	pool, repo := internal.DatabaseConnect(ctx, config)
+	appConfig := internal.LoadAppConfig()
+	pool, repo := internal.DatabaseConnect(ctx, appConfig)
 	defer pool.Close()
 
 	r := gin.Default()
@@ -29,7 +29,7 @@ func main() {
 	}
 	api := humagin.NewWithGroup(r, apiGroup, humaConfig)
 
-	authHandler := handlers.AuthHandler{Repo: repo}
+	authHandler := handlers.AuthHandler{Repo: repo, Config: appConfig}
 	{
 		huma.Post(api, "/auth/register", authHandler.Register)
 		huma.Post(api, "/auth/login", authHandler.Login)
@@ -50,5 +50,5 @@ func main() {
 		huma.Delete(api, "/reviews/{id}", reviewHandler.Delete)
 	}
 
-	r.Run(fmt.Sprintf(":%s", config.Port))
+	r.Run(fmt.Sprintf(":%s", appConfig.Port))
 }

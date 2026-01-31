@@ -9,6 +9,7 @@ import (
 type AppConfig struct {
 	PostgresURL string
 	Port        string
+	JWTSecret   []byte
 }
 
 func LoadAppConfig() *AppConfig {
@@ -20,5 +21,6 @@ func LoadAppConfig() *AppConfig {
 	return &AppConfig{
 		PostgresURL: os.Getenv("GOOSE_DBSTRING"),
 		Port:        os.Getenv("PORT"),
+		JWTSecret:   []byte(os.Getenv("JWT_SECRET")),
 	}
 }
