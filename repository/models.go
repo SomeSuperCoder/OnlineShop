@@ -25,3 +25,13 @@ type Review struct {
 	Stars     int32     `json:"stars"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type User struct {
+	ID           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	Username     string    `json:"username"`
+	Name         string    `json:"name"`
+	Balance      int32     `json:"balance"`
+	PasswordHash string    `json:"password_hash"`
+	CreatedAt    time.Time `json:"created_at"`
+}

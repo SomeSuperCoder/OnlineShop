@@ -1,6 +1,4 @@
 -- +goose Up
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 CREATE TABLE products (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
@@ -12,5 +10,4 @@ CREATE TABLE products (
 );
 
 -- +goose Down
-DROP TABLE orders;
-DROP EXTENSION "uuid-ossp";
+DROP TABLE products;

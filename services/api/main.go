@@ -20,10 +20,19 @@ func main() {
 	r := gin.Default()
 
 	apiGroup := r.Group("/api/v1")
-	api := humagin.NewWithGroup(r, apiGroup, huma.DefaultConfig(
+	humaConfig := huma.DefaultConfig(
 		"Online Shop Huma + Gin API",
 		"1.0.0",
-	))
+	)
+	humaConfig.Servers = []*huma.Server{
+		{URL: "http://localhost:8888/api/v1", Description: "Local API version 1"},
+	}
+	api := humagin.NewWithGroup(r, apiGroup, humaConfig)
+
+	authHandler := handlers.AuthHandler{Repo: repo}
+	{
+		huma.Post(api, "/auth/register", authHandler.Register)
+	}
 
 	orderHandler := handlers.ProductHandler{Repo: repo}
 	{
