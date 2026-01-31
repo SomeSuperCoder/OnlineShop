@@ -4,7 +4,7 @@ CREATE TABLE products (
 
   name VARCHAR NOT NULL,
   details TEXT NOT NULL,
-  price INT NOT NULL,
+  price INT NOT NULL CHECK(price >= 0),
   
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

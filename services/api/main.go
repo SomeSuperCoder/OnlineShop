@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/SomeSuperCoder/OnlineShop/handlers"
 	"github.com/SomeSuperCoder/OnlineShop/internal"
+	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humagin"
 	"github.com/gin-gonic/gin"
@@ -28,6 +30,11 @@ func main() {
 		{URL: "http://localhost:8888/api/v1", Description: "Local API version 1"},
 	}
 	api := humagin.NewWithGroup(r, apiGroup, humaConfig)
+	fmt.Printf("appConfig.TestMode: %v\n", appConfig.TestMode)
+	if !appConfig.TestMode {
+		log.Println("Adding auth middleware")
+		api.UseMiddleware(middleware.AuthMiddleware(api, appConfig))
+	}
 
 	authHandler := handlers.AuthHandler{Repo: repo, Config: appConfig}
 	{

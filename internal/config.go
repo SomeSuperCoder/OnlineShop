@@ -10,6 +10,7 @@ type AppConfig struct {
 	PostgresURL string
 	Port        string
 	JWTSecret   []byte
+	TestMode    bool
 }
 
 func LoadAppConfig() *AppConfig {
@@ -22,5 +23,6 @@ func LoadAppConfig() *AppConfig {
 		PostgresURL: os.Getenv("GOOSE_DBSTRING"),
 		Port:        os.Getenv("PORT"),
 		JWTSecret:   []byte(os.Getenv("JWT_SECRET")),
+		TestMode:    os.Getenv("API_TEST") == "true",
 	}
 }
