@@ -4,11 +4,11 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: ordersdb
+      POSTGRES_DB: onlineshop
     ports:
       - "5432:5432"
     volumes:
-      - example-postgres-volume:/var/lib/postgresql/data
+      - online-shop-postgres-volume:/var/lib/postgresql/data
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -16,8 +16,8 @@ services:
       - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
     volumes:
-      - example-redis-volume:/data
+      - online-shop-redis-volume:/data
 volumes:
-  example-postgres-volume:
-  example-redis-volume:
+  online-shop-postgres-volume:
+  online-shop-redis-volume:
 

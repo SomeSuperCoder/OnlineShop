@@ -10,8 +10,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type Order struct {
+type Product struct {
 	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
 	Details   string    `json:"details"`
+	Price     int32     `json:"price"`
 	CreatedAt time.Time `json:"created_at"`
 }

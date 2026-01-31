@@ -15,4 +15,4 @@ migrate:
 
 wait:
 	echo "Sleeping for 1 second..."
-	sleep 1
+	sleep 3

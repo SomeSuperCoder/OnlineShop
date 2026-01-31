@@ -3,7 +3,7 @@ package internal
 import (
 	"context"
 
-	"github.com/SomeSuperCoder/HumaExampleProject/repository"
+	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

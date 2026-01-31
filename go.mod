@@ -1,4 +1,4 @@
-module github.com/SomeSuperCoder/HumaExampleProject
+module github.com/SomeSuperCoder/OnlineShop
 
 go 1.25.5
 
