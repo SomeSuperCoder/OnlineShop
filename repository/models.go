@@ -17,3 +17,11 @@ type Product struct {
 	Price     int32     `json:"price"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type Review struct {
+	ID        uuid.UUID `json:"id"`
+	Product   uuid.UUID `json:"product"`
+	Comment   *string   `json:"comment"`
+	Stars     int32     `json:"stars"`
+	CreatedAt time.Time `json:"created_at"`
+}

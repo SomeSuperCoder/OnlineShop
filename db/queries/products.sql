@@ -1,5 +1,5 @@
 -- name: FindAllProducts :many
-SELECT * FROM products ORDER BY created_at;
+SELECT * FROM products ORDER BY created_at DESC;
 
 -- name: InsertProduct :one
 INSERT INTO products

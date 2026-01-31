@@ -30,5 +30,10 @@ func main() {
 	huma.Post(api, "/orders", orderHandler.Post)
 	huma.Delete(api, "/orders/{id}", orderHandler.Delete)
 
+	reviewHandler := handlers.ReviewHandler{Repo: repo}
+	huma.Get(api, "/orders/{id}/reviews", reviewHandler.GetFor)
+	huma.Post(api, "/orders/{id}/reviews", reviewHandler.Post)
+	huma.Delete(api, "/reviews/{id}", reviewHandler.Delete)
+
 	r.Run(fmt.Sprintf(":%s", config.Port))
 }

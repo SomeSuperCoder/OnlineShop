@@ -33,7 +33,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, arg DeleteProductParams) (P
 }
 
 const findAllProducts = `-- name: FindAllProducts :many
-SELECT id, name, details, price, created_at FROM products ORDER BY created_at
+SELECT id, name, details, price, created_at FROM products ORDER BY created_at DESC
 `
 
 func (q *Queries) FindAllProducts(ctx context.Context) ([]Product, error) {
