@@ -13,23 +13,27 @@ func GenerateCartKey(username string) string {
 }
 
 type AddItemResult struct {
-	Cart []string `json:"cart"`
-	Len  int64    `json:"len"`
+	Cart  []string `json:"cart"`
+	Len   int      `json:"len"`
+	Added int64    `json:"added" description:"the amount of new entries added to the cart"`
 }
 
 func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, username string) (*AddItemResult, error) {
 	pipeline := rdb.TxPipeline()
 
 	key := GenerateCartKey(username)
-	pushCmd := pipeline.LPush(ctx, key, item.String())
-	getCmd := pipeline.LRange(ctx, key, 0, -1)
+	pushCmd := pipeline.ZAdd(ctx, key, redis.Z{
+		Score:  0,
+		Member: item.String(),
+	})
+	getCmd := pipeline.ZRange(ctx, key, 0, -1)
 
 	_, err := pipeline.Exec(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute pipeline: %w", err)
 	}
 
-	newLen, err := pushCmd.Result()
+	added, err := pushCmd.Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to push a new item to cart: %w", err)
 	}
@@ -40,7 +44,8 @@ func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, username st
 	}
 
 	return &AddItemResult{
-		Cart: newCart,
-		Len:  newLen,
+		Cart:  newCart,
+		Len:   len(newCart),
+		Added: added,
 	}, nil
 }
