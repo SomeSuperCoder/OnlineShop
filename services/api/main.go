@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/SomeSuperCoder/OnlineShop/handlers"
@@ -13,12 +12,13 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humagin"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
 	ctx := context.Background()
 	appConfig := internal.LoadAppConfig()
-	pool, repo, _ := internal.DatabaseConnect(ctx, appConfig)
+	pool, repo, redisClient := internal.DatabaseConnect(ctx, appConfig)
 	defer pool.Close()
 
 	r := gin.Default()
@@ -33,17 +33,14 @@ func main() {
 	}
 	api := humagin.NewWithGroup(r, apiGroup, humaConfig)
 	fmt.Printf("appConfig.TestMode: %v\n", appConfig.TestMode)
-	if !appConfig.TestMode {
-		log.Println("Adding auth middleware")
-		api.UseMiddleware(middleware.AuthMiddleware(api, appConfig))
-	}
+	api.UseMiddleware(middleware.AuthMiddleware(api, appConfig))
 
-	MountRoutes(api, repo, appConfig)
+	MountRoutes(api, repo, redisClient, appConfig)
 
 	r.Run(fmt.Sprintf(":%s", appConfig.Port))
 }
 
-func MountRoutes(api huma.API, repo *repository.Queries, appConfig *internal.AppConfig) {
+func MountRoutes(api huma.API, repo *repository.Queries, redisClient *redis.Client, appConfig *internal.AppConfig) {
 	authHandler := handlers.AuthHandler{Repo: repo, Config: appConfig}
 	{
 		huma.Register(api, huma.Operation{
@@ -116,4 +113,13 @@ func MountRoutes(api huma.API, repo *repository.Queries, appConfig *internal.App
 		}, reviewHandler.Delete)
 	}
 
+	cartHandler := handlers.CartHandler{RedisClient: redisClient}
+	{
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPost,
+			Path:    "/cart",
+			Tags:    []string{"Cart"},
+			Summary: "Add item to cart",
+		}, cartHandler.Post)
+	}
 }

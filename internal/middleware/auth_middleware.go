@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -9,12 +10,28 @@ import (
 )
 
 const AuthClaimsContextKey = "claims"
+const TestUsername = "test-user"
+
+func GetClaimsFromContext(ctx context.Context) (*internal.Claims, error) {
+	if claims, ok := ctx.Value(AuthClaimsContextKey).(internal.Claims); ok {
+		return &claims, nil
+	} else {
+		return nil, huma.Error401Unauthorized("faield to extract JWT claims form context")
+	}
+}
 
 func AuthMiddleware(api huma.API, config *internal.AppConfig) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		path := ctx.Operation().Path
 		if strings.HasPrefix(path, "/auth") {
 			next(ctx)
+			return
+		}
+
+		if config.TestMode {
+			next(huma.WithValue(ctx, AuthClaimsContextKey, internal.Claims{
+				Username: TestUsername,
+			}))
 			return
 		}
 
