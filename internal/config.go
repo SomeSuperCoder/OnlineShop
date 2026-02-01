@@ -11,6 +11,7 @@ type AppConfig struct {
 	Port        string
 	JWTSecret   []byte
 	TestMode    bool
+	RedisURL    string
 }
 
 func LoadAppConfig() *AppConfig {
@@ -24,5 +25,6 @@ func LoadAppConfig() *AppConfig {
 		Port:        os.Getenv("PORT"),
 		JWTSecret:   []byte(os.Getenv("JWT_SECRET")),
 		TestMode:    os.Getenv("API_TEST") == "true",
+		RedisURL:    os.Getenv("REDIS_URL"),
 	}
 }

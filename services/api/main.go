@@ -18,7 +18,7 @@ import (
 func main() {
 	ctx := context.Background()
 	appConfig := internal.LoadAppConfig()
-	pool, repo := internal.DatabaseConnect(ctx, appConfig)
+	pool, repo, _ := internal.DatabaseConnect(ctx, appConfig)
 	defer pool.Close()
 
 	r := gin.Default()
