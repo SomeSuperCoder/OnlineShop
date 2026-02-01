@@ -116,10 +116,22 @@ func MountRoutes(api huma.API, repo *repository.Queries, redisClient *redis.Clie
 	cartHandler := handlers.CartHandler{RedisClient: redisClient}
 	{
 		huma.Register(api, huma.Operation{
+			Method:  http.MethodGet,
+			Path:    "/cart",
+			Tags:    []string{"Cart"},
+			Summary: "Get cart for the current user",
+		}, cartHandler.Get)
+		huma.Register(api, huma.Operation{
 			Method:  http.MethodPost,
 			Path:    "/cart",
 			Tags:    []string{"Cart"},
 			Summary: "Add item to cart",
 		}, cartHandler.Post)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodDelete,
+			Path:    "/cart/{id}",
+			Tags:    []string{"Cart"},
+			Summary: "Remove item from cart",
+		}, cartHandler.Delete)
 	}
 }
