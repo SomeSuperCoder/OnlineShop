@@ -1,6 +1,12 @@
 -- name: FindAllProducts :many
 SELECT * FROM products ORDER BY created_at DESC;
 
+-- name: SearchForProducts :many
+SELECT *, ts_rank(search_vector, to_tsquery($1)) as relevance
+FROM products
+WHERE search_vector @@ to_tsquery($1)
+ORDER BY relevance DESC;
+
 -- name: InsertProduct :one
 INSERT INTO products
   (name, details, price)

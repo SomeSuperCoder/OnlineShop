@@ -21,6 +21,24 @@ func (h *ProductHandler) GetAll(ctx context.Context, input *struct{}) (*GetAllPr
 	return resp, err
 }
 
+type SearchForProductsRequest struct {
+	Query string `query:"query"`
+}
+type SearchForProductsResponse struct {
+	Body struct {
+		Products []repository.SearchForProductsRow `json:"products"`
+	}
+}
+
+func (h *ProductHandler) SearchForProducts(ctx context.Context, input *SearchForProductsRequest) (*SearchForProductsResponse, error) {
+	resp := new(SearchForProductsResponse)
+	res, err := h.Repo.SearchForProducts(ctx, repository.SearchForProductsParams{
+		ToTsquery: input.Query,
+	})
+	resp.Body.Products = res
+	return resp, err
+}
+
 type CreateProductRequest struct {
 	Body repository.InsertProductParams
 }

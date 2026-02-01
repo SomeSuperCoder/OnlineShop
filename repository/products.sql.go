@@ -7,12 +7,13 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const deleteProduct = `-- name: DeleteProduct :one
-DELETE FROM products WHERE id = $1 RETURNING id, name, details, price, created_at
+DELETE FROM products WHERE id = $1 RETURNING id, name, details, price, created_at, search_vector
 `
 
 type DeleteProductParams struct {
@@ -28,12 +29,13 @@ func (q *Queries) DeleteProduct(ctx context.Context, arg DeleteProductParams) (P
 		&i.Details,
 		&i.Price,
 		&i.CreatedAt,
+		&i.SearchVector,
 	)
 	return i, err
 }
 
 const findAllProducts = `-- name: FindAllProducts :many
-SELECT id, name, details, price, created_at FROM products ORDER BY created_at DESC
+SELECT id, name, details, price, created_at, search_vector FROM products ORDER BY created_at DESC
 `
 
 func (q *Queries) FindAllProducts(ctx context.Context) ([]Product, error) {
@@ -51,6 +53,7 @@ func (q *Queries) FindAllProducts(ctx context.Context) ([]Product, error) {
 			&i.Details,
 			&i.Price,
 			&i.CreatedAt,
+			&i.SearchVector,
 		); err != nil {
 			return nil, err
 		}
@@ -63,7 +66,7 @@ func (q *Queries) FindAllProducts(ctx context.Context) ([]Product, error) {
 }
 
 const getProductByID = `-- name: GetProductByID :one
-SELECT id, name, details, price, created_at FROM products WHERE id = $1 LIMIT 1
+SELECT id, name, details, price, created_at, search_vector FROM products WHERE id = $1 LIMIT 1
 `
 
 type GetProductByIDParams struct {
@@ -79,6 +82,7 @@ func (q *Queries) GetProductByID(ctx context.Context, arg GetProductByIDParams) 
 		&i.Details,
 		&i.Price,
 		&i.CreatedAt,
+		&i.SearchVector,
 	)
 	return i, err
 }
@@ -87,7 +91,7 @@ const insertProduct = `-- name: InsertProduct :one
 INSERT INTO products
   (name, details, price)
 VALUES ( $1, $2, $3 )
-RETURNING id, name, details, price, created_at
+RETURNING id, name, details, price, created_at, search_vector
 `
 
 type InsertProductParams struct {
@@ -105,6 +109,56 @@ func (q *Queries) InsertProduct(ctx context.Context, arg InsertProductParams) (P
 		&i.Details,
 		&i.Price,
 		&i.CreatedAt,
+		&i.SearchVector,
 	)
 	return i, err
+}
+
+const searchForProducts = `-- name: SearchForProducts :many
+SELECT id, name, details, price, created_at, search_vector, ts_rank(search_vector, to_tsquery($1)) as relevance
+FROM products
+WHERE search_vector @@ to_tsquery($1)
+ORDER BY relevance DESC
+`
+
+type SearchForProductsParams struct {
+	ToTsquery string `json:"to_tsquery"`
+}
+
+type SearchForProductsRow struct {
+	ID           uuid.UUID   `json:"id"`
+	Name         string      `json:"name"`
+	Details      string      `json:"details"`
+	Price        int32       `json:"price"`
+	CreatedAt    time.Time   `json:"created_at"`
+	SearchVector interface{} `json:"search_vector"`
+	Relevance    float32     `json:"relevance"`
+}
+
+func (q *Queries) SearchForProducts(ctx context.Context, arg SearchForProductsParams) ([]SearchForProductsRow, error) {
+	rows, err := q.db.Query(ctx, searchForProducts, arg.ToTsquery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchForProductsRow{}
+	for rows.Next() {
+		var i SearchForProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Details,
+			&i.Price,
+			&i.CreatedAt,
+			&i.SearchVector,
+			&i.Relevance,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

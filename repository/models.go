@@ -11,11 +11,12 @@ import (
 )
 
 type Product struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Details   string    `json:"details"`
-	Price     int32     `json:"price"`
-	CreatedAt time.Time `json:"created_at"`
+	ID           uuid.UUID   `json:"id"`
+	Name         string      `json:"name"`
+	Details      string      `json:"details"`
+	Price        int32       `json:"price"`
+	CreatedAt    time.Time   `json:"created_at"`
+	SearchVector interface{} `json:"search_vector"`
 }
 
 type Review struct {

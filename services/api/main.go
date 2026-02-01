@@ -70,6 +70,12 @@ func MountRoutes(api huma.API, repo *repository.Queries, appConfig *internal.App
 		}, productHandler.GetAll)
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodGet,
+			Path:    "/products/search",
+			Tags:    []string{"Products"},
+			Summary: "Search for products",
+		}, productHandler.SearchForProducts)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodGet,
 			Path:    "/products/{id}",
 			Tags:    []string{"Products"},
 			Summary: "Get product by ID",

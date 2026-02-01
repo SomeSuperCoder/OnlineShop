@@ -3,6 +3,9 @@ all: databases wait migrate serve
 serve:
 	go run services/api/main.go
 
+api-test:
+	API_TEST=true go run services/api/main.go
+
 databases:
 	docker-compose -f db/docker-compose.yaml up -d
 

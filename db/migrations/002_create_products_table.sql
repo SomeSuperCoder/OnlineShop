@@ -9,5 +9,12 @@ CREATE TABLE products (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE products
+ADD COLUMN search_vector tsvector
+GENERATED ALWAYS AS (
+  setweight(to_tsvector('english', coalesce(name, '')), 'A') ||
+  setweight(to_tsvector('english', coalesce(details, '')), 'B')
+) STORED;
+
 -- +goose Down
 DROP TABLE products;
