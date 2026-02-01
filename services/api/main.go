@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/SomeSuperCoder/OnlineShop/handlers"
 	"github.com/SomeSuperCoder/OnlineShop/internal"
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
+	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humagin"
 	"github.com/gin-gonic/gin"
@@ -36,26 +38,76 @@ func main() {
 		api.UseMiddleware(middleware.AuthMiddleware(api, appConfig))
 	}
 
+	MountRoutes(api, repo, appConfig)
+
+	r.Run(fmt.Sprintf(":%s", appConfig.Port))
+}
+
+func MountRoutes(api huma.API, repo *repository.Queries, appConfig *internal.AppConfig) {
 	authHandler := handlers.AuthHandler{Repo: repo, Config: appConfig}
 	{
-		huma.Post(api, "/auth/register", authHandler.Register)
-		huma.Post(api, "/auth/login", authHandler.Login)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPost,
+			Path:    "/auth/register",
+			Tags:    []string{"Auth"},
+			Summary: "Register",
+		}, authHandler.Register)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPost,
+			Path:    "/auth/login",
+			Tags:    []string{"Auth"},
+			Summary: "Login",
+		}, authHandler.Register)
 	}
 
-	orderHandler := handlers.ProductHandler{Repo: repo}
+	productHandler := handlers.ProductHandler{Repo: repo}
 	{
-		huma.Get(api, "/orders", orderHandler.GetAll)
-		huma.Get(api, "/orders/{id}", orderHandler.GetByID)
-		huma.Post(api, "/orders", orderHandler.Post)
-		huma.Delete(api, "/orders/{id}", orderHandler.Delete)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodGet,
+			Path:    "/products",
+			Tags:    []string{"Products"},
+			Summary: "Get all products",
+		}, productHandler.GetAll)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodGet,
+			Path:    "/products/{id}",
+			Tags:    []string{"Products"},
+			Summary: "Get product by ID",
+		}, productHandler.GetByID)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPost,
+			Path:    "/products",
+			Tags:    []string{"Products"},
+			Summary: "Create product",
+		}, productHandler.Post)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodDelete,
+			Path:    "/products/{id}",
+			Tags:    []string{"Products"},
+			Summary: "Delete Product",
+		}, productHandler.Delete)
 	}
 
 	reviewHandler := handlers.ReviewHandler{Repo: repo}
 	{
-		huma.Get(api, "/orders/{id}/reviews", reviewHandler.GetFor)
-		huma.Post(api, "/orders/{id}/reviews", reviewHandler.Post)
-		huma.Delete(api, "/reviews/{id}", reviewHandler.Delete)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodGet,
+			Path:    "/products/{id}/reviews",
+			Tags:    []string{"Reviews"},
+			Summary: "Get reviews for product",
+		}, reviewHandler.GetFor)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPost,
+			Path:    "/products/{id}/reviews",
+			Tags:    []string{"Reviews"},
+			Summary: "Create review for product",
+		}, reviewHandler.Post)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodDelete,
+			Path:    "/reviews/{id}",
+			Tags:    []string{"Reviews"},
+			Summary: "Delete review",
+		}, reviewHandler.Delete)
 	}
 
-	r.Run(fmt.Sprintf(":%s", appConfig.Port))
 }
