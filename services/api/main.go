@@ -63,7 +63,7 @@ func MountRoutes(api huma.API, repo *repository.Queries, redisClient *redis.Clie
 			Method:  http.MethodGet,
 			Path:    "/products",
 			Tags:    []string{"Products"},
-			Summary: "Get all products",
+			Summary: "Get products paged",
 		}, productHandler.GetAll)
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodGet,
@@ -97,7 +97,7 @@ func MountRoutes(api huma.API, repo *repository.Queries, redisClient *redis.Clie
 			Method:  http.MethodGet,
 			Path:    "/products/{id}/reviews",
 			Tags:    []string{"Reviews"},
-			Summary: "Get reviews for product",
+			Summary: "Get reviews for product paged",
 		}, reviewHandler.GetFor)
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodPost,

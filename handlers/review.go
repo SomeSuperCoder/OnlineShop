@@ -34,6 +34,7 @@ func (h *ReviewHandler) Post(ctx context.Context, input *CreateReviewRequest) (*
 }
 
 type GetReviewsForProductRequest struct {
+	Pagination
 	ID uuid.UUID `path:"id"`
 }
 type GetReviewsForProducttResponse struct {
@@ -44,6 +45,8 @@ func (h *ReviewHandler) GetFor(ctx context.Context, input *GetReviewsForProductR
 	resp := new(GetReviewsForProducttResponse)
 	res, err := h.Repo.GetReviewsForProduct(ctx, repository.GetReviewsForProductParams{
 		Product: input.ID,
+		Limit:   input.Limit,
+		Offset:  input.Offset,
 	})
 	resp.Body = res
 	return resp, err

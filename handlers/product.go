@@ -14,9 +14,12 @@ type GetAllProductsResponse struct {
 	Body *[]repository.Product
 }
 
-func (h *ProductHandler) GetAll(ctx context.Context, input *struct{}) (*GetAllProductsResponse, error) {
+func (h *ProductHandler) GetAll(ctx context.Context, input *Pagination) (*GetAllProductsResponse, error) {
 	resp := new(GetAllProductsResponse)
-	res, err := h.Repo.FindAllProducts(ctx)
+	res, err := h.Repo.FindProductsPaged(ctx, repository.FindProductsPagedParams{
+		Limit:  input.Limit,
+		Offset: input.Offset,
+	})
 	resp.Body = &res
 	return resp, err
 }

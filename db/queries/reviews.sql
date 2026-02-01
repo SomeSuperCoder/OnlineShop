@@ -1,5 +1,6 @@
 -- name: GetReviewsForProduct :many
-SELECT * FROM reviews WHERE product = $1 ORDER BY created_at DESC;
+SELECT * FROM reviews WHERE product = $1 ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
 
 -- name: InsertReview :one
 INSERT INTO reviews

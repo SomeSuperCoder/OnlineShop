@@ -34,14 +34,17 @@ func (q *Queries) DeleteReview(ctx context.Context, arg DeleteReviewParams) (Rev
 
 const getReviewsForProduct = `-- name: GetReviewsForProduct :many
 SELECT id, product, comment, stars, created_at FROM reviews WHERE product = $1 ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
 `
 
 type GetReviewsForProductParams struct {
 	Product uuid.UUID `json:"product"`
+	Limit   int32     `json:"limit"`
+	Offset  int32     `json:"offset"`
 }
 
 func (q *Queries) GetReviewsForProduct(ctx context.Context, arg GetReviewsForProductParams) ([]Review, error) {
-	rows, err := q.db.Query(ctx, getReviewsForProduct, arg.Product)
+	rows, err := q.db.Query(ctx, getReviewsForProduct, arg.Product, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

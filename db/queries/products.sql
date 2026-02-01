@@ -1,5 +1,6 @@
--- name: FindAllProducts :many
-SELECT * FROM products ORDER BY created_at DESC;
+-- name: FindProductsPaged :many
+SELECT * FROM products ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
 
 -- name: SearchForProducts :many
 SELECT *, ts_rank(search_vector, to_tsquery($1)) as relevance

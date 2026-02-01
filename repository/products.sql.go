@@ -34,12 +34,18 @@ func (q *Queries) DeleteProduct(ctx context.Context, arg DeleteProductParams) (P
 	return i, err
 }
 
-const findAllProducts = `-- name: FindAllProducts :many
+const findProductsPaged = `-- name: FindProductsPaged :many
 SELECT id, name, details, price, created_at, search_vector FROM products ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) FindAllProducts(ctx context.Context) ([]Product, error) {
-	rows, err := q.db.Query(ctx, findAllProducts)
+type FindProductsPagedParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) FindProductsPaged(ctx context.Context, arg FindProductsPagedParams) ([]Product, error) {
+	rows, err := q.db.Query(ctx, findProductsPaged, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
