@@ -51,6 +51,45 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertU
 	return i, err
 }
 
+const setEmailParam = `-- name: SetEmailParam :one
+SELECT set_config('app.user_id', $1, true)
+`
+
+type SetEmailParamParams struct {
+	SetConfig string `json:"set_config"`
+}
+
+func (q *Queries) SetEmailParam(ctx context.Context, arg SetEmailParamParams) (string, error) {
+	row := q.db.QueryRow(ctx, setEmailParam, arg.SetConfig)
+	var set_config string
+	err := row.Scan(&set_config)
+	return set_config, err
+}
+
+const unsafeGetUserByEmail = `-- name: UnsafeGetUserByEmail :one
+SELECT id, email, username, role, name, balance, password_hash, created_at FROM users WHERE email = $1
+`
+
+type UnsafeGetUserByEmailParams struct {
+	Email string `json:"email"`
+}
+
+func (q *Queries) UnsafeGetUserByEmail(ctx context.Context, arg UnsafeGetUserByEmailParams) (User, error) {
+	row := q.db.QueryRow(ctx, unsafeGetUserByEmail, arg.Email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Role,
+		&i.Name,
+		&i.Balance,
+		&i.PasswordHash,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const verifyAuth = `-- name: VerifyAuth :one
 SELECT EXISTS (
   SELECT 1

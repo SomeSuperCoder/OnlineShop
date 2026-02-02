@@ -15,7 +15,7 @@ type CreateReviewRequest struct {
 	ID   uuid.UUID `path:"id"`
 	Body struct {
 		Comment string `json:"comment"`
-		Stars   int32  `json:"stars" minimum:"1" maximum:"5"`
+		Stars   int32  `json:"stars"`
 	}
 }
 type CreateReviewResponse struct {

@@ -65,7 +65,7 @@ func (h *AuthHandler) Login(ctx context.Context, input *LoginRequest) (*LoginRes
 	}
 
 	// Create a new JWT token
-	jwt, err := internal.GenerateToken(input.Body.Email, h.Config)
+	jwt, err := internal.GenerateToken(ctx, h.Repo, input.Body.Email, h.Config)
 	if err != nil {
 		return resp, err
 	}

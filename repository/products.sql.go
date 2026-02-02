@@ -13,7 +13,7 @@ import (
 )
 
 const deleteProduct = `-- name: DeleteProduct :one
-DELETE FROM products WHERE id = $1 RETURNING id, name, details, price, created_at, search_vector
+DELETE FROM products WHERE id = $1 RETURNING id, name, details, price, owner, created_at, search_vector
 `
 
 type DeleteProductParams struct {
@@ -28,6 +28,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, arg DeleteProductParams) (P
 		&i.Name,
 		&i.Details,
 		&i.Price,
+		&i.Owner,
 		&i.CreatedAt,
 		&i.SearchVector,
 	)
@@ -35,7 +36,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, arg DeleteProductParams) (P
 }
 
 const findProductsPaged = `-- name: FindProductsPaged :many
-SELECT id, name, details, price, created_at, search_vector FROM products ORDER BY created_at DESC
+SELECT id, name, details, price, owner, created_at, search_vector FROM products ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -58,6 +59,7 @@ func (q *Queries) FindProductsPaged(ctx context.Context, arg FindProductsPagedPa
 			&i.Name,
 			&i.Details,
 			&i.Price,
+			&i.Owner,
 			&i.CreatedAt,
 			&i.SearchVector,
 		); err != nil {
@@ -72,7 +74,7 @@ func (q *Queries) FindProductsPaged(ctx context.Context, arg FindProductsPagedPa
 }
 
 const getProductByID = `-- name: GetProductByID :one
-SELECT id, name, details, price, created_at, search_vector FROM products WHERE id = $1 LIMIT 1
+SELECT id, name, details, price, owner, created_at, search_vector FROM products WHERE id = $1 LIMIT 1
 `
 
 type GetProductByIDParams struct {
@@ -87,6 +89,7 @@ func (q *Queries) GetProductByID(ctx context.Context, arg GetProductByIDParams) 
 		&i.Name,
 		&i.Details,
 		&i.Price,
+		&i.Owner,
 		&i.CreatedAt,
 		&i.SearchVector,
 	)
@@ -97,7 +100,7 @@ const insertProduct = `-- name: InsertProduct :one
 INSERT INTO products
   (name, details, price)
 VALUES ( $1, $2, $3 )
-RETURNING id, name, details, price, created_at, search_vector
+RETURNING id, name, details, price, owner, created_at, search_vector
 `
 
 type InsertProductParams struct {
@@ -114,6 +117,7 @@ func (q *Queries) InsertProduct(ctx context.Context, arg InsertProductParams) (P
 		&i.Name,
 		&i.Details,
 		&i.Price,
+		&i.Owner,
 		&i.CreatedAt,
 		&i.SearchVector,
 	)
@@ -121,7 +125,7 @@ func (q *Queries) InsertProduct(ctx context.Context, arg InsertProductParams) (P
 }
 
 const searchForProducts = `-- name: SearchForProducts :many
-SELECT id, name, details, price, created_at, search_vector, ts_rank(search_vector, to_tsquery($1)) as relevance
+SELECT id, name, details, price, owner, created_at, search_vector, ts_rank(search_vector, to_tsquery($1)) as relevance
 FROM products
 WHERE search_vector @@ to_tsquery($1)
 ORDER BY relevance DESC
@@ -136,6 +140,7 @@ type SearchForProductsRow struct {
 	Name         string      `json:"name"`
 	Details      string      `json:"details"`
 	Price        int32       `json:"price"`
+	Owner        uuid.UUID   `json:"owner"`
 	CreatedAt    time.Time   `json:"created_at"`
 	SearchVector interface{} `json:"search_vector"`
 	Relevance    float32     `json:"relevance"`
@@ -155,6 +160,7 @@ func (q *Queries) SearchForProducts(ctx context.Context, arg SearchForProductsPa
 			&i.Name,
 			&i.Details,
 			&i.Price,
+			&i.Owner,
 			&i.CreatedAt,
 			&i.SearchVector,
 			&i.Relevance,

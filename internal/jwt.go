@@ -1,20 +1,33 @@
 package internal
 
 import (
+	"context"
 	"time"
 
+	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type Claims struct {
-	Username string `json:"username"`
+	Username string          `json:"username"`
+	Email    string          `json:"email"`
+	Role     repository.Role `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(email string, config *AppConfig) (string, error) {
+func GenerateToken(ctx context.Context, repo *repository.Queries, email string, config *AppConfig) (string, error) {
+	user, err := repo.UnsafeGetUserByEmail(ctx, repository.UnsafeGetUserByEmailParams{
+		Email: email,
+	})
+	if err != nil {
+		return "", err
+	}
+
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
-		Username: email,
+		Username: user.Email,
+		Email:    user.Email,
+		Role:     user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

@@ -5,16 +5,61 @@
 package repository
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type Role string
+
+const (
+	RoleAdmin Role = "admin"
+	RoleUser  Role = "user"
+)
+
+func (e *Role) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Role(s)
+	case string:
+		*e = Role(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Role: %T", src)
+	}
+	return nil
+}
+
+type NullRole struct {
+	Role  Role `json:"role"`
+	Valid bool `json:"valid"` // Valid is true if Role is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.Role, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Role.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Role), nil
+}
 
 type Product struct {
 	ID           uuid.UUID   `json:"id"`
 	Name         string      `json:"name"`
 	Details      string      `json:"details"`
 	Price        int32       `json:"price"`
+	Owner        uuid.UUID   `json:"owner"`
 	CreatedAt    time.Time   `json:"created_at"`
 	SearchVector interface{} `json:"search_vector"`
 }
@@ -31,6 +76,7 @@ type User struct {
 	ID           uuid.UUID `json:"id"`
 	Email        string    `json:"email"`
 	Username     string    `json:"username"`
+	Role         Role      `json:"role"`
 	Name         string    `json:"name"`
 	Balance      int32     `json:"balance"`
 	PasswordHash string    `json:"password_hash"`

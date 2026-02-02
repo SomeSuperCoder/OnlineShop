@@ -1,3 +1,9 @@
+-- name: SetEmailParam :one
+SELECT set_config('app.user_id', $1, true);
+
+-- name: UnsafeGetUserByEmail :one
+SELECT * FROM users WHERE email = $1;
+
 -- name: InsertUser :one
 INSERT INTO users (
 	email, username, name, password_hash
