@@ -12,6 +12,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humagin"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -35,12 +36,12 @@ func main() {
 	fmt.Printf("appConfig.TestMode: %v\n", appConfig.TestMode)
 	api.UseMiddleware(middleware.AuthMiddleware(api, appConfig))
 
-	MountRoutes(api, repo, redisClient, appConfig)
+	MountRoutes(api, repo, pool, redisClient, appConfig)
 
 	r.Run(fmt.Sprintf(":%s", appConfig.Port))
 }
 
-func MountRoutes(api huma.API, repo *repository.Queries, redisClient *redis.Client, appConfig *internal.AppConfig) {
+func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, redisClient *redis.Client, appConfig *internal.AppConfig) {
 	authHandler := handlers.AuthHandler{Repo: repo, Config: appConfig}
 	{
 		huma.Register(api, huma.Operation{
@@ -57,7 +58,7 @@ func MountRoutes(api huma.API, repo *repository.Queries, redisClient *redis.Clie
 		}, authHandler.Register)
 	}
 
-	productHandler := handlers.ProductHandler{Repo: repo}
+	productHandler := handlers.ProductHandler{Repo: repo, Pool: pool}
 	{
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodGet,
@@ -83,6 +84,12 @@ func MountRoutes(api huma.API, repo *repository.Queries, redisClient *redis.Clie
 			Tags:    []string{"Products"},
 			Summary: "Create product",
 		}, productHandler.Post)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPatch,
+			Path:    "/products/{id}",
+			Tags:    []string{"Products"},
+			Summary: "Update product",
+		}, productHandler.Patch)
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodDelete,
 			Path:    "/products/{id}",

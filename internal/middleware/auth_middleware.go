@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/SomeSuperCoder/OnlineShop/internal"
+	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/google/uuid"
 )
 
 const AuthClaimsContextKey = "claims"
@@ -30,8 +32,12 @@ func AuthMiddleware(api huma.API, config *internal.AppConfig) func(ctx huma.Cont
 
 		if config.TestMode {
 			next(huma.WithValue(ctx, AuthClaimsContextKey, internal.Claims{
+				UUID:     uuid.MustParse("0a381e5b-7c7e-4fc7-9441-133871d89223"),
 				Username: TestUsername,
+				Email:    "test@localhost",
+				Role:     repository.RoleUser,
 			}))
+
 			return
 		}
 

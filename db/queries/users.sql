@@ -1,5 +1,5 @@
--- name: SetEmailParam :one
-SELECT set_config('app.user_id', $1, true);
+-- name: SetConfig :one
+SELECT set_config('app.user_id', sqlc.arg('user_id'), false);
 
 -- name: UnsafeGetUserByEmail :one
 SELECT * FROM users WHERE email = $1;

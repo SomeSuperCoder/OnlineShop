@@ -6,9 +6,11 @@ import (
 
 	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type Claims struct {
+	UUID     uuid.UUID       `json:"uuid"`
 	Username string          `json:"username"`
 	Email    string          `json:"email"`
 	Role     repository.Role `json:"role"`
@@ -25,6 +27,7 @@ func GenerateToken(ctx context.Context, repo *repository.Queries, email string, 
 
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
+		UUID:     user.ID,
 		Username: user.Email,
 		Email:    user.Email,
 		Role:     user.Role,

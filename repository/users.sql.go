@@ -51,16 +51,16 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertU
 	return i, err
 }
 
-const setEmailParam = `-- name: SetEmailParam :one
+const setConfig = `-- name: SetConfig :one
 SELECT set_config('app.user_id', $1, true)
 `
 
-type SetEmailParamParams struct {
-	SetConfig string `json:"set_config"`
+type SetConfigParams struct {
+	UserID string `json:"user_id"`
 }
 
-func (q *Queries) SetEmailParam(ctx context.Context, arg SetEmailParamParams) (string, error) {
-	row := q.db.QueryRow(ctx, setEmailParam, arg.SetConfig)
+func (q *Queries) SetConfig(ctx context.Context, arg SetConfigParams) (string, error) {
+	row := q.db.QueryRow(ctx, setConfig, arg.UserID)
 	var set_config string
 	err := row.Scan(&set_config)
 	return set_config, err

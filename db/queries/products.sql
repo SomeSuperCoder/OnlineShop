@@ -10,8 +10,17 @@ ORDER BY relevance DESC;
 
 -- name: InsertProduct :one
 INSERT INTO products
-  (name, details, price)
-VALUES ( $1, $2, $3 )
+  (name, details, price, owner)
+VALUES ( $1, $2, $3, current_setting('app.user_id')::uuid)
+RETURNING *;
+
+-- name: UpdateProduct :one
+UPDATE products
+SET
+  name = coalesce(sqlc.arg('name'), name),
+  details = coalesce(sqlc.arg('details'), details),
+  price = coalesce(sqlc.arg('price'), price)
+WHERE id = sqlc.arg('id')
 RETURNING *;
 
 -- name: GetProductByID :one

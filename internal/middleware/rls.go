@@ -2,33 +2,43 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/sirupsen/logrus"
 )
 
-func WithAuthContext(ctx context.Context, db *pgx.Conn, repo *repository.Queries, fn func(context.Context, *repository.Queries) error) error {
-	tx, err := db.Begin(ctx)
+func WithAuthContext[T any](ctx context.Context, pool *pgxpool.Pool, repo *repository.Queries, fn func(context.Context, *repository.Queries) (T, error)) (*T, error) {
+	tx, err := pool.Begin(ctx)
 	if err != nil {
-		return err
+		logrus.Errorln("Failed to begin a transaction")
+		return new(T), err
 	}
 	defer tx.Rollback(ctx)
 
 	claims, err := GetClaimsFromContext(ctx)
 	if err != nil {
-		return huma.Error401Unauthorized("Failed to extract JWT claims from context", err)
+		logrus.Errorln("Failed to extract JWT claims from context")
+		return new(T), huma.Error401Unauthorized("Failed to extract JWT claims from context", err)
 	}
 
 	qtx := repo.WithTx(tx)
-	qtx.SetEmailParam(ctx, repository.SetEmailParamParams{
-		SetConfig: claims.Email,
+	setConfigResult, err := qtx.SetConfig(ctx, repository.SetConfigParams{
+		UserID: claims.UUID.String(),
 	})
-
-	err = fn(ctx, qtx)
 	if err != nil {
-		return err
+		logrus.Errorln("Failed to set config params")
+		return new(T), err
+	}
+	fmt.Printf("setConfigResult: %v\n", setConfigResult)
+
+	fResult, err := fn(ctx, qtx)
+	if err != nil {
+		logrus.Errorf("Inner function failed due to: %s", err.Error())
+		return new(T), err
 	}
 
-	return tx.Commit(ctx)
+	return &fResult, tx.Commit(ctx)
 }

@@ -20,6 +20,11 @@ CREATE TABLE users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "users_own_data_only" ON users
+    FOR ALL USING (id = current_setting('app.user_id')::uuid);
+
 -- +goose Down
 DROP TABLE users;
 DROP TYPE role;

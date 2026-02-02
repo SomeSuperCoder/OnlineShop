@@ -98,8 +98,8 @@ func (q *Queries) GetProductByID(ctx context.Context, arg GetProductByIDParams) 
 
 const insertProduct = `-- name: InsertProduct :one
 INSERT INTO products
-  (name, details, price)
-VALUES ( $1, $2, $3 )
+  (name, details, price, owner)
+VALUES ( $1, $2, $3, current_setting('app.user_id')::uuid)
 RETURNING id, name, details, price, owner, created_at, search_vector
 `
 
@@ -173,4 +173,41 @@ func (q *Queries) SearchForProducts(ctx context.Context, arg SearchForProductsPa
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateProduct = `-- name: UpdateProduct :one
+UPDATE products
+SET
+  name = coalesce($1, name),
+  details = coalesce($2, details),
+  price = coalesce($3, price)
+WHERE id = $4
+RETURNING id, name, details, price, owner, created_at, search_vector
+`
+
+type UpdateProductParams struct {
+	Name    string    `json:"name"`
+	Details string    `json:"details"`
+	Price   int32     `json:"price"`
+	ID      uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
+	row := q.db.QueryRow(ctx, updateProduct,
+		arg.Name,
+		arg.Details,
+		arg.Price,
+		arg.ID,
+	)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Details,
+		&i.Price,
+		&i.Owner,
+		&i.CreatedAt,
+		&i.SearchVector,
+	)
+	return i, err
 }

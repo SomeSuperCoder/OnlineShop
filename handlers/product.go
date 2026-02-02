@@ -3,12 +3,15 @@ package handlers
 import (
 	"context"
 
+	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type ProductHandler struct {
 	Repo *repository.Queries
+	Pool *pgxpool.Pool
 }
 type GetAllProductsResponse struct {
 	Body *[]repository.Product
@@ -46,13 +49,16 @@ type CreateProductRequest struct {
 	Body repository.InsertProductParams
 }
 type CreateProductResponse struct {
-	Body *repository.Product
+	Body repository.Product
 }
 
 func (h *ProductHandler) Post(ctx context.Context, input *CreateProductRequest) (*CreateProductResponse, error) {
 	resp := new(CreateProductResponse)
-	res, err := h.Repo.InsertProduct(ctx, input.Body)
-	resp.Body = &res
+
+	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Product, error) {
+		return q.InsertProduct(ctx, input.Body)
+	})
+	resp.Body = *res
 	return resp, err
 }
 
@@ -81,5 +87,33 @@ func (h *ProductHandler) Delete(ctx context.Context, input *DeleteProductRequest
 	resp := new(DeleteProductResponse)
 	res, err := h.Repo.DeleteProduct(ctx, repository.DeleteProductParams(*input))
 	resp.Body = &res
+	return resp, err
+}
+
+type UpdateProductRequest struct {
+	ID   uuid.UUID `path:"id"`
+	Body struct {
+		Name    string `json:"name"`
+		Details string `json:"details"`
+		Price   int32  `json:"price"`
+	}
+}
+type UpdateProductResponse struct {
+	Body repository.Product
+}
+
+func (h *ProductHandler) Patch(ctx context.Context, input *UpdateProductRequest) (*UpdateProductResponse, error) {
+	resp := new(UpdateProductResponse)
+
+	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Product, error) {
+		return q.UpdateProduct(ctx, repository.UpdateProductParams{
+			ID:      input.ID,
+			Name:    input.Body.Name,
+			Details: input.Body.Details,
+			Price:   input.Body.Price,
+		})
+	})
+
+	resp.Body = *res
 	return resp, err
 }
