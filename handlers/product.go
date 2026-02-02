@@ -19,11 +19,13 @@ type GetAllProductsResponse struct {
 
 func (h *ProductHandler) GetAll(ctx context.Context, input *Pagination) (*GetAllProductsResponse, error) {
 	resp := new(GetAllProductsResponse)
-	res, err := h.Repo.FindProductsPaged(ctx, repository.FindProductsPagedParams{
-		Limit:  input.Limit,
-		Offset: input.Offset,
+	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) ([]repository.Product, error) {
+		return q.FindProductsPaged(ctx, repository.FindProductsPagedParams{
+			Limit:  input.Limit,
+			Offset: input.Offset,
+		})
 	})
-	resp.Body = &res
+	resp.Body = res
 	return resp, err
 }
 
@@ -38,10 +40,12 @@ type SearchForProductsResponse struct {
 
 func (h *ProductHandler) SearchForProducts(ctx context.Context, input *SearchForProductsRequest) (*SearchForProductsResponse, error) {
 	resp := new(SearchForProductsResponse)
-	res, err := h.Repo.SearchForProducts(ctx, repository.SearchForProductsParams{
-		ToTsquery: input.Query,
+	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) ([]repository.SearchForProductsRow, error) {
+		return q.SearchForProducts(ctx, repository.SearchForProductsParams{
+			ToTsquery: input.Query,
+		})
 	})
-	resp.Body.Products = res
+	resp.Body.Products = *res
 	return resp, err
 }
 
@@ -85,8 +89,12 @@ type DeleteProductResponse struct {
 
 func (h *ProductHandler) Delete(ctx context.Context, input *DeleteProductRequest) (*DeleteProductResponse, error) {
 	resp := new(DeleteProductResponse)
-	res, err := h.Repo.DeleteProduct(ctx, repository.DeleteProductParams(*input))
-	resp.Body = &res
+	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Product, error) {
+		return q.DeleteProduct(ctx, repository.DeleteProductParams{
+			ID: input.ID,
+		})
+	})
+	resp.Body = res
 	return resp, err
 }
 
@@ -104,7 +112,6 @@ type UpdateProductResponse struct {
 
 func (h *ProductHandler) Patch(ctx context.Context, input *UpdateProductRequest) (*UpdateProductResponse, error) {
 	resp := new(UpdateProductResponse)
-
 	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Product, error) {
 		return q.UpdateProduct(ctx, repository.UpdateProductParams{
 			ID:      input.ID,
@@ -113,7 +120,6 @@ func (h *ProductHandler) Patch(ctx context.Context, input *UpdateProductRequest)
 			Price:   input.Body.Price,
 		})
 	})
-
 	resp.Body = *res
 	return resp, err
 }
