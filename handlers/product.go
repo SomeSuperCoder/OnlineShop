@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
@@ -94,6 +93,13 @@ type DeleteProductResponse struct {
 func (h *ProductHandler) Delete(ctx context.Context, input *DeleteProductRequest) (*DeleteProductResponse, error) {
 	resp := new(DeleteProductResponse)
 	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Product, error) {
+		if is, err := q.IsProductOwner(ctx, repository.IsProductOwnerParams{
+			ID: input.ID,
+		}); err != nil {
+			return repository.Product{}, err
+		} else if !is {
+			return repository.Product{}, huma.Error401Unauthorized("Access denied")
+		}
 		return q.DeleteProduct(ctx, repository.DeleteProductParams{
 			ID: input.ID,
 		})
@@ -119,12 +125,10 @@ func (h *ProductHandler) Patch(ctx context.Context, input *UpdateProductRequest)
 	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Product, error) {
 		if is, err := q.IsProductOwner(ctx, repository.IsProductOwnerParams{
 			ID: input.ID,
-		}); !is {
-			fmt.Printf("err: %v\n", err)
-			fmt.Printf("is: %v\n", is)
-			return repository.Product{}, huma.Error401Unauthorized("Access denied")
-		} else if err != nil {
+		}); err != nil {
 			return repository.Product{}, err
+		} else if !is {
+			return repository.Product{}, huma.Error401Unauthorized("Access denied")
 		}
 
 		return q.UpdateProduct(ctx, repository.UpdateProductParams{
