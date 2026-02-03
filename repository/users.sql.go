@@ -52,7 +52,7 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertU
 }
 
 const setConfig = `-- name: SetConfig :one
-SELECT set_config('app.user_id', $1, true)
+SELECT set_config('app.user_id', $1, false)
 `
 
 type SetConfigParams struct {

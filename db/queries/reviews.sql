@@ -4,8 +4,8 @@ LIMIT $2 OFFSET $3;
 
 -- name: InsertReview :one
 INSERT INTO reviews
-( product, comment, stars )
-VALUES ( $1, $2, $3 )
+( product, comment, stars, author )
+VALUES ( $1, $2, $3, current_setting('app.user_id')::uuid )
 RETURNING *;
 
 -- name: DeleteReview :one

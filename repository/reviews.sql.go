@@ -12,7 +12,7 @@ import (
 )
 
 const deleteReview = `-- name: DeleteReview :one
-DELETE FROM reviews WHERE id = $1 RETURNING id, product, comment, stars, created_at
+DELETE FROM reviews WHERE id = $1 RETURNING id, product, comment, stars, author, created_at
 `
 
 type DeleteReviewParams struct {
@@ -27,13 +27,14 @@ func (q *Queries) DeleteReview(ctx context.Context, arg DeleteReviewParams) (Rev
 		&i.Product,
 		&i.Comment,
 		&i.Stars,
+		&i.Author,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getReviewsForProduct = `-- name: GetReviewsForProduct :many
-SELECT id, product, comment, stars, created_at FROM reviews WHERE product = $1 ORDER BY created_at DESC
+SELECT id, product, comment, stars, author, created_at FROM reviews WHERE product = $1 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
 `
 
@@ -57,6 +58,7 @@ func (q *Queries) GetReviewsForProduct(ctx context.Context, arg GetReviewsForPro
 			&i.Product,
 			&i.Comment,
 			&i.Stars,
+			&i.Author,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -71,9 +73,9 @@ func (q *Queries) GetReviewsForProduct(ctx context.Context, arg GetReviewsForPro
 
 const insertReview = `-- name: InsertReview :one
 INSERT INTO reviews
-( product, comment, stars )
-VALUES ( $1, $2, $3 )
-RETURNING id, product, comment, stars, created_at
+( product, comment, stars, author )
+VALUES ( $1, $2, $3, current_setting('app.user_id')::uuid )
+RETURNING id, product, comment, stars, author, created_at
 `
 
 type InsertReviewParams struct {
@@ -90,6 +92,7 @@ func (q *Queries) InsertReview(ctx context.Context, arg InsertReviewParams) (Rev
 		&i.Product,
 		&i.Comment,
 		&i.Stars,
+		&i.Author,
 		&i.CreatedAt,
 	)
 	return i, err

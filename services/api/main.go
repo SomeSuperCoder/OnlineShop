@@ -65,7 +65,7 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 			Path:    "/products",
 			Tags:    []string{"Products"},
 			Summary: "Get products paged",
-		}, productHandler.GetAll)
+		}, productHandler.GetPaged)
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodGet,
 			Path:    "/products/search",
@@ -98,7 +98,7 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 		}, productHandler.Delete)
 	}
 
-	reviewHandler := handlers.ReviewHandler{Repo: repo}
+	reviewHandler := handlers.ReviewHandler{Repo: repo, Pool: pool}
 	{
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodGet,

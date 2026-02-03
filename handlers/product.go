@@ -17,7 +17,7 @@ type GetAllProductsResponse struct {
 	Body *[]repository.Product
 }
 
-func (h *ProductHandler) GetAll(ctx context.Context, input *Pagination) (*GetAllProductsResponse, error) {
+func (h *ProductHandler) GetPaged(ctx context.Context, input *Pagination) (*GetAllProductsResponse, error) {
 	resp := new(GetAllProductsResponse)
 	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) ([]repository.Product, error) {
 		return q.FindProductsPaged(ctx, repository.FindProductsPagedParams{
@@ -70,13 +70,15 @@ type GetProductByIDRequest struct {
 	ID uuid.UUID `path:"id"`
 }
 type GetProductByIDResponse struct {
-	Body *repository.Product
+	Body repository.Product
 }
 
 func (h *ProductHandler) GetByID(ctx context.Context, input *GetProductByIDRequest) (*GetProductByIDResponse, error) {
 	resp := new(GetProductByIDResponse)
-	res, err := h.Repo.GetProductByID(ctx, repository.GetProductByIDParams(*input))
-	resp.Body = &res
+	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Product, error) {
+		return h.Repo.GetProductByID(ctx, repository.GetProductByIDParams(*input))
+	})
+	resp.Body = *res
 	return resp, err
 }
 
