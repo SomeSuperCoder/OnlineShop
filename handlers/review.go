@@ -5,6 +5,7 @@ import (
 
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -69,6 +70,14 @@ type DeleteReviewResponse struct {
 func (h *ReviewHandler) Delete(ctx context.Context, input *DeleteReviewRequest) (*DeleteReviewResponse, error) {
 	resp := new(DeleteReviewResponse)
 	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Review, error) {
+		if is, err := q.IsOwnerOrAuthor(ctx, repository.IsOwnerOrAuthorParams{
+			ID: input.ID,
+		}); err != nil {
+			return repository.Review{}, err
+		} else if !is {
+			return repository.Review{}, huma.Error401Unauthorized("Access denied")
+		}
+
 		return q.DeleteReview(ctx, repository.DeleteReviewParams(*input))
 
 	})

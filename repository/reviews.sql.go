@@ -97,3 +97,27 @@ func (q *Queries) InsertReview(ctx context.Context, arg InsertReviewParams) (Rev
 	)
 	return i, err
 }
+
+const isOwnerOrAuthor = `-- name: IsOwnerOrAuthor :one
+SELECT EXISTS (
+  SELECT 1 FROM reviews r
+  LEFT JOIN products p ON r.product = p.id
+  WHERE r.id = $1 AND (
+    current_setting('app.user_id')::UUID IN (
+      r.author,
+      p.owner
+    )
+  )
+)
+`
+
+type IsOwnerOrAuthorParams struct {
+	ID uuid.UUID `json:"id"`
+}
+
+func (q *Queries) IsOwnerOrAuthor(ctx context.Context, arg IsOwnerOrAuthorParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isOwnerOrAuthor, arg.ID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
