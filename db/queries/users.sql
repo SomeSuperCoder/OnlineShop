@@ -1,3 +1,6 @@
+-- name: Is :one
+SELECT current_setting('app.user_id')::uuid = sqlc.arg('user_id')::uuid;
+
 -- name: SetConfig :one
 SELECT set_config('app.user_id', sqlc.arg('user_id'), false);
 

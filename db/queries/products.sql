@@ -1,3 +1,8 @@
+-- name: IsProductOwner :one
+SELECT current_setting('app.user_id')::uuid = (
+  SELECT owner FROM products WHERE id = $1
+);
+
 -- name: FindProductsPaged :many
 SELECT * FROM products ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
@@ -17,9 +22,9 @@ RETURNING *;
 -- name: UpdateProduct :one
 UPDATE products
 SET
-  name = coalesce(sqlc.arg('name'), name),
-  details = coalesce(sqlc.arg('details'), details),
-  price = coalesce(sqlc.arg('price'), price)
+  name = coalesce(sqlc.narg('name'), name),
+  details = coalesce(sqlc.narg('details'), details),
+  price = coalesce(sqlc.narg('price'), price)
 WHERE id = sqlc.arg('id')
 RETURNING *;
 

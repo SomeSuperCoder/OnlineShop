@@ -16,6 +16,15 @@ migrate:
 	goose up
 	sqlc generate
 
+-include .env
+export
+
+recreate:
+	pg_dump $(GOOSE_DBSTRING) --data-only -t reviews -t users -t products > data.dump
+	goose reset
+	goose up
+	psql $(GOOSE_DBSTRING) < data.dump
+
 wait:
 	echo "Sleeping for 1 second..."
 	sleep 3

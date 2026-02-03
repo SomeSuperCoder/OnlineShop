@@ -51,6 +51,21 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertU
 	return i, err
 }
 
+const is = `-- name: Is :one
+SELECT current_setting('app.user_id')::uuid = $1::uuid
+`
+
+type IsParams struct {
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) Is(ctx context.Context, arg IsParams) (bool, error) {
+	row := q.db.QueryRow(ctx, is, arg.UserID)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const setConfig = `-- name: SetConfig :one
 SELECT set_config('app.user_id', $1, false)
 `

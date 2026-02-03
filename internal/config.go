@@ -21,7 +21,7 @@ func LoadAppConfig() *AppConfig {
 	}
 
 	return &AppConfig{
-		PostgresURL: os.Getenv("APP_DBSTRING"),
+		PostgresURL: os.Getenv("GOOSE_DBSTRING"),
 		Port:        os.Getenv("PORT"),
 		JWTSecret:   []byte(os.Getenv("JWT_SECRET")),
 		TestMode:    os.Getenv("API_TEST") == "true",

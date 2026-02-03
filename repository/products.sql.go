@@ -124,6 +124,23 @@ func (q *Queries) InsertProduct(ctx context.Context, arg InsertProductParams) (P
 	return i, err
 }
 
+const isProductOwner = `-- name: IsProductOwner :one
+SELECT current_setting('app.user_id')::uuid = (
+  SELECT owner FROM products WHERE id = $1
+)
+`
+
+type IsProductOwnerParams struct {
+	ID uuid.UUID `json:"id"`
+}
+
+func (q *Queries) IsProductOwner(ctx context.Context, arg IsProductOwnerParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isProductOwner, arg.ID)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const searchForProducts = `-- name: SearchForProducts :many
 SELECT id, name, details, price, owner, created_at, search_vector, ts_rank(search_vector, to_tsquery($1)) as relevance
 FROM products
@@ -186,9 +203,9 @@ RETURNING id, name, details, price, owner, created_at, search_vector
 `
 
 type UpdateProductParams struct {
-	Name    string    `json:"name"`
-	Details string    `json:"details"`
-	Price   int32     `json:"price"`
+	Name    *string   `json:"name"`
+	Details *string   `json:"details"`
+	Price   *int32    `json:"price"`
 	ID      uuid.UUID `json:"id"`
 }
 

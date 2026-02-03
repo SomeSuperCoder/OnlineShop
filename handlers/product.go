@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -103,9 +105,9 @@ func (h *ProductHandler) Delete(ctx context.Context, input *DeleteProductRequest
 type UpdateProductRequest struct {
 	ID   uuid.UUID `path:"id"`
 	Body struct {
-		Name    string `json:"name"`
-		Details string `json:"details"`
-		Price   int32  `json:"price"`
+		Name    *string `json:"name,omitempty"`
+		Details *string `json:"details,omitempty"`
+		Price   *int32  `json:"price,omitempty"`
 	}
 }
 type UpdateProductResponse struct {
@@ -115,6 +117,16 @@ type UpdateProductResponse struct {
 func (h *ProductHandler) Patch(ctx context.Context, input *UpdateProductRequest) (*UpdateProductResponse, error) {
 	resp := new(UpdateProductResponse)
 	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Product, error) {
+		if is, err := q.IsProductOwner(ctx, repository.IsProductOwnerParams{
+			ID: input.ID,
+		}); !is {
+			fmt.Printf("err: %v\n", err)
+			fmt.Printf("is: %v\n", is)
+			return repository.Product{}, huma.Error401Unauthorized("Access denied")
+		} else if err != nil {
+			return repository.Product{}, err
+		}
+
 		return q.UpdateProduct(ctx, repository.UpdateProductParams{
 			ID:      input.ID,
 			Name:    input.Body.Name,
