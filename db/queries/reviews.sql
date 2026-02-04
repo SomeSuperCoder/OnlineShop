@@ -1,3 +1,9 @@
+-- name: IsAuthor :one
+SELECT EXISTS (
+  SELECT 1 FROM reviews
+  WHERE id = $1 AND author = current_setting('app.user_id')::UUID
+);
+
 -- name: IsOwnerOrAuthor :one
 SELECT EXISTS (
   SELECT 1 FROM reviews r
@@ -17,7 +23,15 @@ LIMIT $2 OFFSET $3;
 -- name: InsertReview :one
 INSERT INTO reviews
 ( product, comment, stars, author )
-VALUES ( $1, $2, $3, current_setting('app.user_id')::uuid )
+VALUES ( $1, $2, $3, current_setting('app.user_id')::UUID )
+RETURNING *;
+
+-- name: UpdateReview :one
+UPDATE reviews
+SET
+  comment = coalesce(sqlc.narg('comment'), comment),
+  stars = coalesce(sqlc.narg('stars'), stars)
+WHERE id = $1
 RETURNING *;
 
 -- name: DeleteReview :one

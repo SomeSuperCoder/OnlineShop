@@ -5,7 +5,6 @@ import (
 
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
-	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -98,7 +97,7 @@ func (h *ProductHandler) Delete(ctx context.Context, input *DeleteProductRequest
 		}); err != nil {
 			return repository.Product{}, err
 		} else if !is {
-			return repository.Product{}, huma.Error401Unauthorized("Access denied")
+			return repository.Product{}, AccessDeniedError
 		}
 		return q.DeleteProduct(ctx, repository.DeleteProductParams{
 			ID: input.ID,
@@ -128,7 +127,7 @@ func (h *ProductHandler) Patch(ctx context.Context, input *UpdateProductRequest)
 		}); err != nil {
 			return repository.Product{}, err
 		} else if !is {
-			return repository.Product{}, huma.Error401Unauthorized("Access denied")
+			return repository.Product{}, AccessDeniedError
 		}
 
 		return q.UpdateProduct(ctx, repository.UpdateProductParams{

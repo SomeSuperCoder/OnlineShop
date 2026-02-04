@@ -5,7 +5,6 @@ import (
 
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
-	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -60,6 +59,40 @@ func (h *ReviewHandler) GetFor(ctx context.Context, input *GetReviewsForProductR
 	return resp, err
 }
 
+type UpdateReviewRequest struct {
+	ID   uuid.UUID `path:"id"`
+	Body struct {
+		Comment *string `json:"comment,omitempty"`
+		Stars   *int32  `json:"stars,omitempty"`
+	}
+}
+type UpdateReviewResponse struct {
+	Body repository.Review
+}
+
+func (h *ReviewHandler) Patch(ctx context.Context, input *UpdateReviewRequest) (*UpdateReviewResponse, error) {
+	resp := new(UpdateReviewResponse)
+
+	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.Review, error) {
+		if is, err := q.IsAuthor(ctx, repository.IsAuthorParams{
+			ID: input.ID,
+		}); err != nil {
+			return repository.Review{}, err
+		} else if !is {
+			return repository.Review{}, AccessDeniedError
+		}
+
+		return q.UpdateReview(ctx, repository.UpdateReviewParams{
+			ID:      input.ID,
+			Comment: input.Body.Comment,
+			Stars:   input.Body.Stars,
+		})
+	})
+
+	resp.Body = *res
+	return resp, err
+}
+
 type DeleteReviewRequest struct {
 	ID uuid.UUID `path:"id"`
 }
@@ -75,7 +108,7 @@ func (h *ReviewHandler) Delete(ctx context.Context, input *DeleteReviewRequest) 
 		}); err != nil {
 			return repository.Review{}, err
 		} else if !is {
-			return repository.Review{}, huma.Error401Unauthorized("Access denied")
+			return repository.Review{}, AccessDeniedError
 		}
 
 		return q.DeleteReview(ctx, repository.DeleteReviewParams(*input))

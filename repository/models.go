@@ -70,6 +70,8 @@ type Review struct {
 	Comment   *string   `json:"comment"`
 	Stars     int32     `json:"stars"`
 	Author    uuid.UUID `json:"author"`
+	Upvotes   int32     `json:"upvotes"`
+	Downvotes int32     `json:"downvotes"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

@@ -113,6 +113,12 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 			Summary: "Create review for product",
 		}, reviewHandler.Post)
 		huma.Register(api, huma.Operation{
+			Method:  http.MethodPatch,
+			Path:    "/reviews/{id}",
+			Tags:    []string{"Reviews"},
+			Summary: "Update review",
+		}, reviewHandler.Patch)
+		huma.Register(api, huma.Operation{
 			Method:  http.MethodDelete,
 			Path:    "/reviews/{id}",
 			Tags:    []string{"Reviews"},

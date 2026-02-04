@@ -12,7 +12,7 @@ import (
 )
 
 const deleteReview = `-- name: DeleteReview :one
-DELETE FROM reviews WHERE id = $1 RETURNING id, product, comment, stars, author, created_at
+DELETE FROM reviews WHERE id = $1 RETURNING id, product, comment, stars, author, upvotes, downvotes, created_at
 `
 
 type DeleteReviewParams struct {
@@ -28,13 +28,15 @@ func (q *Queries) DeleteReview(ctx context.Context, arg DeleteReviewParams) (Rev
 		&i.Comment,
 		&i.Stars,
 		&i.Author,
+		&i.Upvotes,
+		&i.Downvotes,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getReviewsForProduct = `-- name: GetReviewsForProduct :many
-SELECT id, product, comment, stars, author, created_at FROM reviews WHERE product = $1 ORDER BY created_at DESC
+SELECT id, product, comment, stars, author, upvotes, downvotes, created_at FROM reviews WHERE product = $1 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
 `
 
@@ -59,6 +61,8 @@ func (q *Queries) GetReviewsForProduct(ctx context.Context, arg GetReviewsForPro
 			&i.Comment,
 			&i.Stars,
 			&i.Author,
+			&i.Upvotes,
+			&i.Downvotes,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -74,8 +78,8 @@ func (q *Queries) GetReviewsForProduct(ctx context.Context, arg GetReviewsForPro
 const insertReview = `-- name: InsertReview :one
 INSERT INTO reviews
 ( product, comment, stars, author )
-VALUES ( $1, $2, $3, current_setting('app.user_id')::uuid )
-RETURNING id, product, comment, stars, author, created_at
+VALUES ( $1, $2, $3, current_setting('app.user_id')::UUID )
+RETURNING id, product, comment, stars, author, upvotes, downvotes, created_at
 `
 
 type InsertReviewParams struct {
@@ -93,9 +97,29 @@ func (q *Queries) InsertReview(ctx context.Context, arg InsertReviewParams) (Rev
 		&i.Comment,
 		&i.Stars,
 		&i.Author,
+		&i.Upvotes,
+		&i.Downvotes,
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const isAuthor = `-- name: IsAuthor :one
+SELECT EXISTS (
+  SELECT 1 FROM reviews
+  WHERE id = $1 AND author = current_setting('app.user_id')::UUID
+)
+`
+
+type IsAuthorParams struct {
+	ID uuid.UUID `json:"id"`
+}
+
+func (q *Queries) IsAuthor(ctx context.Context, arg IsAuthorParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isAuthor, arg.ID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const isOwnerOrAuthor = `-- name: IsOwnerOrAuthor :one
@@ -120,4 +144,35 @@ func (q *Queries) IsOwnerOrAuthor(ctx context.Context, arg IsOwnerOrAuthorParams
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const updateReview = `-- name: UpdateReview :one
+UPDATE reviews
+SET
+  comment = coalesce($2, comment),
+  stars = coalesce($3, stars)
+WHERE id = $1
+RETURNING id, product, comment, stars, author, upvotes, downvotes, created_at
+`
+
+type UpdateReviewParams struct {
+	ID      uuid.UUID `json:"id"`
+	Comment *string   `json:"comment"`
+	Stars   *int32    `json:"stars"`
+}
+
+func (q *Queries) UpdateReview(ctx context.Context, arg UpdateReviewParams) (Review, error) {
+	row := q.db.QueryRow(ctx, updateReview, arg.ID, arg.Comment, arg.Stars)
+	var i Review
+	err := row.Scan(
+		&i.ID,
+		&i.Product,
+		&i.Comment,
+		&i.Stars,
+		&i.Author,
+		&i.Upvotes,
+		&i.Downvotes,
+		&i.CreatedAt,
+	)
+	return i, err
 }
