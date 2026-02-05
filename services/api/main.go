@@ -157,13 +157,19 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 			Summary: "Upvote or downvote a review",
 		}, voteHandler.Post)
 	}
-	usersHandler := handlers.UserHandler{Repo: repo, Pool: pool}
+	userHandler := handlers.UserHandler{Repo: repo, Pool: pool}
 	{
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPatch,
+			Path:    "/users/{id}",
+			Tags:    []string{"Users"},
+			Summary: "Update a user",
+		}, userHandler.Patch)
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodDelete,
 			Path:    "/users/{id}",
 			Tags:    []string{"Users"},
 			Summary: "Delete a user",
-		}, usersHandler.Delete)
+		}, userHandler.Delete)
 	}
 }
