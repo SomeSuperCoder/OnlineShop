@@ -1,30 +1,34 @@
 package internal
 
 import (
-	"os"
+	"log"
+	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type AppConfig struct {
-	PostgresURL string
-	Port        string
-	JWTSecret   []byte
-	TestMode    bool
-	RedisURL    string
+	// DB stuff
+	PostgresURL string `envconfig:"GOOSE_DBSTRING"`
+	RedisURL    string `envconfig:"REDIS_URL"`
+	// JWT stuff
+	AccessTokenSecret  []byte        `envconfig:"ACCESS_TOKEN_SECRET"`
+	RefreshTokenSecret []byte        `envconfig:"REFRESH_TOKEN_SECRET"`
+	AccessTokenExpiry  time.Duration `envconfig:"ACCESS_TOKEN_EXPIRY"`
+	RefreshTokenExpiry time.Duration `envconfig:"REFRESH_TOKEN_EXPIRY"`
+	// API stuff
+	Port     string `envconfig:"PORT"`
+	TestMode bool   `envconfig:"API_TEST"`
 }
 
 func LoadAppConfig() *AppConfig {
 	err := godotenv.Load()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Faild to load .env due to: %s", err.Error())
 	}
+	appConfig := new(AppConfig)
+	err = envconfig.Process("", appConfig)
 
-	return &AppConfig{
-		PostgresURL: os.Getenv("GOOSE_DBSTRING"),
-		Port:        os.Getenv("PORT"),
-		JWTSecret:   []byte(os.Getenv("JWT_SECRET")),
-		TestMode:    os.Getenv("API_TEST") == "true",
-		RedisURL:    os.Getenv("REDIS_URL"),
-	}
+	return appConfig
 }

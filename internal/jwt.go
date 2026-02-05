@@ -9,6 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type TokenPair struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+}
+
 type Claims struct {
 	UUID     uuid.UUID       `json:"uuid"`
 	Username string          `json:"username"`
@@ -38,13 +44,13 @@ func GenerateToken(ctx context.Context, repo *repository.Queries, email string, 
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(config.JWTSecret)
+	return token.SignedString(config.AccessTokenSecret)
 }
 
 func ValidateToken(tokenString string, config *AppConfig) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
-		return config.JWTSecret, nil
+		return config.AccessTokenSecret, nil
 	})
 	if err != nil || !token.Valid {
 		return nil, err
