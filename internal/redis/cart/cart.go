@@ -8,12 +8,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func GenerateCartKey(username string) string {
-	return fmt.Sprintf("cart:%s", username)
+func GenerateCartKey(userUUID uuid.UUID) string {
+	return fmt.Sprintf("cart:%s", userUUID.String())
 }
 
-func GetCart(ctx context.Context, rdb *redis.Client, username string) ([]string, error) {
-	return rdb.ZRange(ctx, GenerateCartKey(username), 0, -1).Result()
+func GetCart(ctx context.Context, rdb *redis.Client, userUUID uuid.UUID) ([]string, error) {
+	return rdb.ZRange(ctx, GenerateCartKey(userUUID), 0, -1).Result()
 }
 
 type CartModificationResult struct {
@@ -22,10 +22,10 @@ type CartModificationResult struct {
 	Added int64    `json:"added" description:"the amount of new entries added to the cart"`
 }
 
-func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, username string) (*CartModificationResult, error) {
+func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID) (*CartModificationResult, error) {
 	pipeline := rdb.TxPipeline()
 
-	key := GenerateCartKey(username)
+	key := GenerateCartKey(userUUID)
 	addCmd := pipeline.ZAdd(ctx, key, redis.Z{
 		Score:  0,
 		Member: item.String(),
@@ -54,10 +54,10 @@ func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, username st
 	}, nil
 }
 
-func RemoveItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, username string) (*CartModificationResult, error) {
+func RemoveItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID) (*CartModificationResult, error) {
 	pipeline := rdb.TxPipeline()
 
-	key := GenerateCartKey(username)
+	key := GenerateCartKey(userUUID)
 	removeCmd := pipeline.ZRem(ctx, key, item.String())
 	getCmd := pipeline.ZRange(ctx, key, 0, -1)
 

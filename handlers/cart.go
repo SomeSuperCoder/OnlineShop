@@ -26,7 +26,7 @@ func (h *CartHandler) Get(ctx context.Context, input *struct{}) (*GetCartRespons
 	}
 
 	resp := new(GetCartResponse)
-	cartValue, err := cart.GetCart(ctx, h.RedisClient, claims.Username)
+	cartValue, err := cart.GetCart(ctx, h.RedisClient, claims.UUID)
 	resp.Body.Cart = cartValue
 	return resp, err
 }
@@ -47,7 +47,7 @@ func (h *CartHandler) Post(ctx context.Context, input *AddItemToCartRequest) (*A
 	}
 
 	resp := new(AddItemToCartResponse)
-	result, err := cart.AddItem(ctx, h.RedisClient, input.Body.Item, claims.Username)
+	result, err := cart.AddItem(ctx, h.RedisClient, input.Body.Item, claims.UUID)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (h *CartHandler) Delete(ctx context.Context, input *RemoveItemFromCartReque
 	}
 
 	resp := new(RemoveItemFromCartResponse)
-	result, err := cart.RemoveItem(ctx, h.RedisClient, input.ID, claims.Username)
+	result, err := cart.RemoveItem(ctx, h.RedisClient, input.ID, claims.UUID)
 	if err != nil {
 		return nil, err
 	}
