@@ -6,9 +6,6 @@ CREATE TABLE reviews (
   comment TEXT,
   stars INT NOT NULL CHECK ( stars > 0 AND stars <= 5 ),
   author UUID NOT NULL REFERENCES users(id),
-
-  upvotes INT NOT NULL DEFAULT 0 CHECK ( upvotes >= 0 ),
-  downvotes INT NOT NULL DEFAULT 0 CHECK (downvotes >= 0),
   
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

@@ -17,7 +17,16 @@ SELECT EXISTS (
 );
 
 -- name: GetReviewsForProduct :many
-SELECT * FROM reviews WHERE product = $1 ORDER BY created_at DESC
+SELECT
+  r.*,
+  coalesce(sum(CASE WHEN v.type = 'upvote' THEN 1 ELSE 0 END), 0) AS upvotes,
+  coalesce(sum(CASE WHEN v.type = 'downvote' THEN 1 ELSE 0 END), 0) AS downvotes,
+  coalesce(sum(CASE WHEN v.type = 'upvote' THEN 1 WHEN v.type = 'downvote' THEN -1 ELSE 0 END)) AS rating
+FROM reviews r
+LEFT JOIN votes v ON r.id = v.review
+WHERE r.product = $1
+GROUP BY r.id
+ORDER BY r.created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: InsertReview :one

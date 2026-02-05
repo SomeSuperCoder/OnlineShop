@@ -54,6 +54,48 @@ func (ns NullRole) Value() (driver.Value, error) {
 	return string(ns.Role), nil
 }
 
+type VoteType string
+
+const (
+	VoteTypeUpvote   VoteType = "upvote"
+	VoteTypeDownvote VoteType = "downvote"
+)
+
+func (e *VoteType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = VoteType(s)
+	case string:
+		*e = VoteType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for VoteType: %T", src)
+	}
+	return nil
+}
+
+type NullVoteType struct {
+	VoteType VoteType `json:"vote_type"`
+	Valid    bool     `json:"valid"` // Valid is true if VoteType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullVoteType) Scan(value interface{}) error {
+	if value == nil {
+		ns.VoteType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.VoteType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullVoteType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.VoteType), nil
+}
+
 type Product struct {
 	ID           uuid.UUID   `json:"id"`
 	Name         string      `json:"name"`
@@ -70,8 +112,6 @@ type Review struct {
 	Comment   *string   `json:"comment"`
 	Stars     int32     `json:"stars"`
 	Author    uuid.UUID `json:"author"`
-	Upvotes   int32     `json:"upvotes"`
-	Downvotes int32     `json:"downvotes"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -84,4 +124,12 @@ type User struct {
 	Balance      int32     `json:"balance"`
 	PasswordHash string    `json:"password_hash"`
 	CreatedAt    time.Time `json:"created_at"`
+}
+
+type Vote struct {
+	ID        uuid.UUID `json:"id"`
+	Review    uuid.UUID `json:"review"`
+	Voter     uuid.UUID `json:"voter"`
+	Type      VoteType  `json:"type"`
+	CreatedAt time.Time `json:"created_at"`
 }

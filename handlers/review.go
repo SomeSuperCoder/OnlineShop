@@ -43,12 +43,12 @@ type GetReviewsForProductRequest struct {
 	ID uuid.UUID `path:"id"`
 }
 type GetReviewsForProducttResponse struct {
-	Body []repository.Review
+	Body []repository.GetReviewsForProductRow
 }
 
 func (h *ReviewHandler) GetFor(ctx context.Context, input *GetReviewsForProductRequest) (*GetReviewsForProducttResponse, error) {
 	resp := new(GetReviewsForProducttResponse)
-	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) ([]repository.Review, error) {
+	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) ([]repository.GetReviewsForProductRow, error) {
 		return q.GetReviewsForProduct(ctx, repository.GetReviewsForProductParams{
 			Product: input.ID,
 			Limit:   input.Limit,

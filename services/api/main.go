@@ -147,4 +147,14 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 			Summary: "Remove item from cart",
 		}, cartHandler.Delete)
 	}
+
+	voteHandler := handlers.VotesHandler{Repo: repo, Pool: pool}
+	{
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPost,
+			Path:    "/reviews/{id}/votes",
+			Tags:    []string{"Votes"},
+			Summary: "Upvote or downvote a review",
+		}, voteHandler.Post)
+	}
 }

@@ -7,12 +7,13 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const deleteReview = `-- name: DeleteReview :one
-DELETE FROM reviews WHERE id = $1 RETURNING id, product, comment, stars, author, upvotes, downvotes, created_at
+DELETE FROM reviews WHERE id = $1 RETURNING id, product, comment, stars, author, created_at
 `
 
 type DeleteReviewParams struct {
@@ -28,15 +29,22 @@ func (q *Queries) DeleteReview(ctx context.Context, arg DeleteReviewParams) (Rev
 		&i.Comment,
 		&i.Stars,
 		&i.Author,
-		&i.Upvotes,
-		&i.Downvotes,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getReviewsForProduct = `-- name: GetReviewsForProduct :many
-SELECT id, product, comment, stars, author, upvotes, downvotes, created_at FROM reviews WHERE product = $1 ORDER BY created_at DESC
+SELECT
+  r.id, r.product, r.comment, r.stars, r.author, r.created_at,
+  coalesce(sum(CASE WHEN v.type = 'upvote' THEN 1 ELSE 0 END), 0) AS upvotes,
+  coalesce(sum(CASE WHEN v.type = 'downvote' THEN 1 ELSE 0 END), 0) AS downvotes,
+  coalesce(sum(CASE WHEN v.type = 'upvote' THEN 1 WHEN v.type = 'downvote' THEN -1 ELSE 0 END)) AS rating
+FROM reviews r
+LEFT JOIN votes v ON r.id = v.review
+WHERE r.product = $1
+GROUP BY r.id
+ORDER BY r.created_at DESC
 LIMIT $2 OFFSET $3
 `
 
@@ -46,24 +54,37 @@ type GetReviewsForProductParams struct {
 	Offset  int32     `json:"offset"`
 }
 
-func (q *Queries) GetReviewsForProduct(ctx context.Context, arg GetReviewsForProductParams) ([]Review, error) {
+type GetReviewsForProductRow struct {
+	ID        uuid.UUID   `json:"id"`
+	Product   uuid.UUID   `json:"product"`
+	Comment   *string     `json:"comment"`
+	Stars     int32       `json:"stars"`
+	Author    uuid.UUID   `json:"author"`
+	CreatedAt time.Time   `json:"created_at"`
+	Upvotes   interface{} `json:"upvotes"`
+	Downvotes interface{} `json:"downvotes"`
+	Rating    interface{} `json:"rating"`
+}
+
+func (q *Queries) GetReviewsForProduct(ctx context.Context, arg GetReviewsForProductParams) ([]GetReviewsForProductRow, error) {
 	rows, err := q.db.Query(ctx, getReviewsForProduct, arg.Product, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Review{}
+	items := []GetReviewsForProductRow{}
 	for rows.Next() {
-		var i Review
+		var i GetReviewsForProductRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Product,
 			&i.Comment,
 			&i.Stars,
 			&i.Author,
+			&i.CreatedAt,
 			&i.Upvotes,
 			&i.Downvotes,
-			&i.CreatedAt,
+			&i.Rating,
 		); err != nil {
 			return nil, err
 		}
@@ -79,7 +100,7 @@ const insertReview = `-- name: InsertReview :one
 INSERT INTO reviews
 ( product, comment, stars, author )
 VALUES ( $1, $2, $3, current_setting('app.user_id')::UUID )
-RETURNING id, product, comment, stars, author, upvotes, downvotes, created_at
+RETURNING id, product, comment, stars, author, created_at
 `
 
 type InsertReviewParams struct {
@@ -97,8 +118,6 @@ func (q *Queries) InsertReview(ctx context.Context, arg InsertReviewParams) (Rev
 		&i.Comment,
 		&i.Stars,
 		&i.Author,
-		&i.Upvotes,
-		&i.Downvotes,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -152,7 +171,7 @@ SET
   comment = coalesce($2, comment),
   stars = coalesce($3, stars)
 WHERE id = $1
-RETURNING id, product, comment, stars, author, upvotes, downvotes, created_at
+RETURNING id, product, comment, stars, author, created_at
 `
 
 type UpdateReviewParams struct {
@@ -170,8 +189,6 @@ func (q *Queries) UpdateReview(ctx context.Context, arg UpdateReviewParams) (Rev
 		&i.Comment,
 		&i.Stars,
 		&i.Author,
-		&i.Upvotes,
-		&i.Downvotes,
 		&i.CreatedAt,
 	)
 	return i, err
