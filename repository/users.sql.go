@@ -7,9 +7,45 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
+
+const deleteUser = `-- name: DeleteUser :one
+DELETE FROM users
+WHERE id = $1
+RETURNING id, email, username, role, name, balance, created_at
+`
+
+type DeleteUserParams struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type DeleteUserRow struct {
+	ID        uuid.UUID `json:"id"`
+	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	Role      Role      `json:"role"`
+	Name      string    `json:"name"`
+	Balance   int32     `json:"balance"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (q *Queries) DeleteUser(ctx context.Context, arg DeleteUserParams) (DeleteUserRow, error) {
+	row := q.db.QueryRow(ctx, deleteUser, arg.ID)
+	var i DeleteUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Role,
+		&i.Name,
+		&i.Balance,
+		&i.CreatedAt,
+	)
+	return i, err
+}
 
 const insertUser = `-- name: InsertUser :one
 INSERT INTO users (
@@ -101,6 +137,49 @@ func (q *Queries) UnsafeGetUserByEmail(ctx context.Context, arg UnsafeGetUserByE
 		&i.Balance,
 		&i.PasswordHash,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateUserInfo = `-- name: UpdateUserInfo :one
+UPDATE users
+SET
+  email = coalesce($2, email),
+  username = coalesce($3, username),
+  name = coalesce($4, name)
+WHERE id = $1
+RETURNING id, email, username, name, balance
+`
+
+type UpdateUserInfoParams struct {
+	ID       uuid.UUID `json:"id"`
+	Email    *string   `json:"email"`
+	Username *string   `json:"username"`
+	Name     *string   `json:"name"`
+}
+
+type UpdateUserInfoRow struct {
+	ID       uuid.UUID `json:"id"`
+	Email    string    `json:"email"`
+	Username string    `json:"username"`
+	Name     string    `json:"name"`
+	Balance  int32     `json:"balance"`
+}
+
+func (q *Queries) UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) (UpdateUserInfoRow, error) {
+	row := q.db.QueryRow(ctx, updateUserInfo,
+		arg.ID,
+		arg.Email,
+		arg.Username,
+		arg.Name,
+	)
+	var i UpdateUserInfoRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Name,
+		&i.Balance,
 	)
 	return i, err
 }

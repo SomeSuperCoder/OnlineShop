@@ -5,7 +5,7 @@ CREATE TABLE reviews (
   product UUID NOT NULL REFERENCES products(id),
   comment TEXT,
   stars INT NOT NULL CHECK ( stars > 0 AND stars <= 5 ),
-  author UUID NOT NULL REFERENCES users(id),
+  author UUID REFERENCES users(id) ON DELETE SET NULL,
   
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

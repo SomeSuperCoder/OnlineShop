@@ -20,7 +20,7 @@ migrate:
 export
 
 recreate:
-	pg_dump $(GOOSE_DBSTRING) --data-only -t reviews -t users -t products > data.dump
+	pg_dump $(GOOSE_DBSTRING) --data-only -t reviews -t users -t products -t votes > data.dump
 	goose reset
 	goose up
 	psql $(GOOSE_DBSTRING) < data.dump

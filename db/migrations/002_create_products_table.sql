@@ -5,7 +5,7 @@ CREATE TABLE products (
   name VARCHAR NOT NULL,
   details TEXT NOT NULL,
   price INT NOT NULL CHECK(price >= 0),
-  owner UUID NOT NULL REFERENCES users(id),
+  owner UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
