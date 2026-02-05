@@ -4,14 +4,17 @@ import (
 	"context"
 
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
+	"github.com/SomeSuperCoder/OnlineShop/internal/redis/cart"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type UserHandler struct {
-	Repo *repository.Queries
-	Pool *pgxpool.Pool
+	Repo  *repository.Queries
+	Pool  *pgxpool.Pool
+	Redis *redis.Client
 }
 
 type UserUpdateRequest struct {
@@ -57,6 +60,7 @@ type UserDeleteResponse struct {
 
 func (h *UserHandler) Delete(ctx context.Context, input *UserDeleteRequest) (*UserDeleteResponse, error) {
 	resp := new(UserDeleteResponse)
+
 	res, err := middleware.WithAuthContext(ctx, h.Pool, h.Repo, func(ctx context.Context, q *repository.Queries) (repository.DeleteUserRow, error) {
 		if is, err := q.Is(ctx, repository.IsParams{
 			UserID: input.ID,
@@ -64,6 +68,12 @@ func (h *UserHandler) Delete(ctx context.Context, input *UserDeleteRequest) (*Us
 			return repository.DeleteUserRow{}, err
 		} else if !is {
 			return repository.DeleteUserRow{}, AccessDeniedError
+		}
+
+		// Also delete the users cart
+		err := cart.DeleteCart(ctx, h.Redis, input.ID)
+		if err != nil {
+			return repository.DeleteUserRow{}, err
 		}
 
 		return q.DeleteUser(ctx, repository.DeleteUserParams{

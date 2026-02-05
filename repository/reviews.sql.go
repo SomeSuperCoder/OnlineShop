@@ -59,7 +59,7 @@ type GetReviewsForProductRow struct {
 	Product   uuid.UUID   `json:"product"`
 	Comment   *string     `json:"comment"`
 	Stars     int32       `json:"stars"`
-	Author    uuid.UUID   `json:"author"`
+	Author    *uuid.UUID  `json:"author"`
 	CreatedAt time.Time   `json:"created_at"`
 	Upvotes   interface{} `json:"upvotes"`
 	Downvotes interface{} `json:"downvotes"`

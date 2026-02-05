@@ -107,12 +107,12 @@ type Product struct {
 }
 
 type Review struct {
-	ID        uuid.UUID `json:"id"`
-	Product   uuid.UUID `json:"product"`
-	Comment   *string   `json:"comment"`
-	Stars     int32     `json:"stars"`
-	Author    uuid.UUID `json:"author"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        uuid.UUID  `json:"id"`
+	Product   uuid.UUID  `json:"product"`
+	Comment   *string    `json:"comment"`
+	Stars     int32      `json:"stars"`
+	Author    *uuid.UUID `json:"author"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 type User struct {
@@ -127,9 +127,9 @@ type User struct {
 }
 
 type Vote struct {
-	ID        uuid.UUID `json:"id"`
-	Review    uuid.UUID `json:"review"`
-	Voter     uuid.UUID `json:"voter"`
-	Type      VoteType  `json:"type"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        uuid.UUID  `json:"id"`
+	Review    uuid.UUID  `json:"review"`
+	Voter     *uuid.UUID `json:"voter"`
+	Type      VoteType   `json:"type"`
+	CreatedAt time.Time  `json:"created_at"`
 }

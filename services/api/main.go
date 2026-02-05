@@ -157,7 +157,7 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 			Summary: "Upvote or downvote a review",
 		}, voteHandler.Post)
 	}
-	userHandler := handlers.UserHandler{Repo: repo, Pool: pool}
+	userHandler := handlers.UserHandler{Repo: repo, Pool: pool, Redis: redisClient}
 	{
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodPatch,

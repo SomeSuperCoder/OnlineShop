@@ -82,3 +82,7 @@ func RemoveItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID
 		Added: added,
 	}, nil
 }
+
+func DeleteCart(ctx context.Context, rdb *redis.Client, userUUID uuid.UUID) error {
+	return rdb.Del(ctx, GenerateCartKey(userUUID)).Err()
+}
