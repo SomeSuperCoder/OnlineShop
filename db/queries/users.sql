@@ -7,6 +7,9 @@ SELECT set_config('app.user_id', sqlc.arg('user_id'), false);
 -- name: UnsafeGetUserByEmail :one
 SELECT * FROM users WHERE email = $1;
 
+-- name: UnsafeGetUserByID :one
+SELECT * FROM users WHERE id = $1;
+
 -- name: InsertUser :one
 INSERT INTO users (
 	email, username, name, password_hash

@@ -42,7 +42,7 @@ func main() {
 }
 
 func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, redisClient *redis.Client, appConfig *internal.AppConfig) {
-	authHandler := handlers.AuthHandler{Repo: repo, Config: appConfig}
+	authHandler := handlers.AuthHandler{Repo: repo, AppConfig: appConfig, Redis: redisClient}
 	{
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodPost,
@@ -55,7 +55,13 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 			Path:    "/auth/login",
 			Tags:    []string{"Auth"},
 			Summary: "Login",
-		}, authHandler.Register)
+		}, authHandler.Login)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPost,
+			Path:    "/auth/refresh",
+			Tags:    []string{"Auth"},
+			Summary: "Refresh",
+		}, authHandler.Refresh)
 	}
 
 	productHandler := handlers.ProductHandler{Repo: repo, Pool: pool}

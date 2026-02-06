@@ -6,11 +6,13 @@ import (
 	"github.com/SomeSuperCoder/OnlineShop/internal"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/redis/go-redis/v9"
 )
 
 type AuthHandler struct {
-	Repo   *repository.Queries
-	Config *internal.AppConfig
+	Repo      *repository.Queries
+	Redis     *redis.Client
+	AppConfig *internal.AppConfig
 }
 
 type RegisterRequest struct {
@@ -44,9 +46,7 @@ type LoginRequest struct {
 	}
 }
 type LoginResponse struct {
-	Body struct {
-		JWT string `json:"jwt"`
-	}
+	Body internal.TokenPair
 }
 
 func (h *AuthHandler) Login(ctx context.Context, input *LoginRequest) (*LoginResponse, error) {
@@ -64,13 +64,56 @@ func (h *AuthHandler) Login(ctx context.Context, input *LoginRequest) (*LoginRes
 		return resp, huma.Error401Unauthorized("Invalid login credentials: ", err)
 	}
 
-	// Create a new JWT token
-	jwt, err := internal.GenerateToken(ctx, h.Repo, input.Body.Email, h.Config)
+	// Get the user from the database by email
+	user, err := h.Repo.UnsafeGetUserByEmail(ctx, repository.UnsafeGetUserByEmailParams{
+		Email: input.Body.Email,
+	})
+
+	// Generate a new token pair
+	tokenPair, err := internal.GenerateTokenPair(ctx, h.Redis, user, h.AppConfig)
 	if err != nil {
 		return resp, err
 	}
 
-	resp.Body.JWT = jwt
+	resp.Body = tokenPair
 
+	return resp, err
+}
+
+type RefreshRequest struct {
+	Body struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+}
+type RefreshResponse struct {
+	Body internal.TokenPair
+}
+
+func (h *AuthHandler) Refresh(ctx context.Context, input *RefreshRequest) (*RefreshResponse, error) {
+	resp := new(RefreshResponse)
+
+	// Verify the refresh token
+	userID, err := internal.ValidateRefreshToken(ctx, h.Redis, input.Body.RefreshToken)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("failed to verify the refresh token", err)
+	}
+
+	// Get the user from the database by ID
+	user, err := h.Repo.UnsafeGetUserByID(ctx, repository.UnsafeGetUserByIDParams{
+		ID: userID,
+	})
+
+	// Remove the old token
+	err = internal.InvalidateRefreshToken(ctx, h.Redis, input.Body.RefreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate a new token pair
+	tokenPair, err := internal.GenerateTokenPair(ctx, h.Redis, user, h.AppConfig)
+	if err != nil {
+		return resp, err
+	}
+	resp.Body = tokenPair
 	return resp, err
 }

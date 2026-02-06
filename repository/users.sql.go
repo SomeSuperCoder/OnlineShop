@@ -141,6 +141,30 @@ func (q *Queries) UnsafeGetUserByEmail(ctx context.Context, arg UnsafeGetUserByE
 	return i, err
 }
 
+const unsafeGetUserByID = `-- name: UnsafeGetUserByID :one
+SELECT id, email, username, role, name, balance, password_hash, created_at FROM users WHERE id = $1
+`
+
+type UnsafeGetUserByIDParams struct {
+	ID uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UnsafeGetUserByID(ctx context.Context, arg UnsafeGetUserByIDParams) (User, error) {
+	row := q.db.QueryRow(ctx, unsafeGetUserByID, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Role,
+		&i.Name,
+		&i.Balance,
+		&i.PasswordHash,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const updateUserInfo = `-- name: UpdateUserInfo :one
 UPDATE users
 SET

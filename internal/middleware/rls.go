@@ -20,7 +20,6 @@ func WithAuthContext[T any](ctx context.Context, pool *pgxpool.Pool, repo *repos
 
 	claims, err := GetClaimsFromContext(ctx)
 	if err != nil {
-		logrus.Errorln("Failed to extract JWT claims from context")
 		return new(T), huma.Error401Unauthorized("Failed to extract JWT claims from context", err)
 	}
 

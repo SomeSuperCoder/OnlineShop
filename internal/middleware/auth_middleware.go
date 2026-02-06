@@ -2,7 +2,10 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/SomeSuperCoder/OnlineShop/internal"
@@ -15,8 +18,20 @@ const AuthClaimsContextKey = "claims"
 const TestUsername = "test-user"
 
 func GetClaimsFromContext(ctx context.Context) (*internal.Claims, error) {
-	if claims, ok := ctx.Value(AuthClaimsContextKey).(internal.Claims); ok {
-		return &claims, nil
+	val := ctx.Value(AuthClaimsContextKey)
+	log.Println(val)
+	valParsed, ok := val.(internal.Claims)
+	log.Println(ok)
+	log.Println(valParsed)
+
+	log.Println("BEGIN DEEP DIVE")
+	log.Printf("Type: %T", val)
+	log.Printf("Kind: %v", reflect.TypeOf(val).Kind())
+	log.Printf("VAlues: %+v", val)
+	log.Println("END DEEP DIVE")
+
+	if claims, ok := ctx.Value(AuthClaimsContextKey).(*internal.Claims); ok {
+		return claims, nil
 	} else {
 		return nil, huma.Error401Unauthorized("faield to extract JWT claims form context")
 	}
@@ -57,6 +72,13 @@ func AuthMiddleware(api huma.API, config *internal.AppConfig) func(ctx huma.Cont
 
 		// Call the next middleware in the chain. This eventually calls the
 		// operation handler as well.
+
+		// TODO: remove
+		jsonData, _ := json.Marshal(claims)
+		log.Println("===== BEGIN auth middleware =====")
+		log.Println(string(jsonData))
+		log.Println("===== END auth middleware =====")
+
 		next(huma.WithValue(ctx, AuthClaimsContextKey, claims))
 	}
 }

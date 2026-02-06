@@ -29,6 +29,9 @@ func LoadAppConfig() *AppConfig {
 	}
 	appConfig := new(AppConfig)
 	err = envconfig.Process("", appConfig)
+	if err != nil {
+		log.Fatalf("Failed to load environment variables due to: %s", err.Error())
+	}
 
 	return appConfig
 }
