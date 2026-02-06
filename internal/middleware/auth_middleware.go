@@ -46,7 +46,7 @@ func AuthMiddleware(api huma.API, config *internal.AppConfig) func(ctx huma.Cont
 		}
 
 		if config.TestMode {
-			next(huma.WithValue(ctx, AuthClaimsContextKey, internal.Claims{
+			next(huma.WithValue(ctx, AuthClaimsContextKey, &internal.Claims{
 				UUID:     uuid.MustParse("0a381e5b-7c7e-4fc7-9441-133871d89223"),
 				Username: TestUsername,
 				Email:    "test@localhost",
