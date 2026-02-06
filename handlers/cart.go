@@ -5,7 +5,7 @@ import (
 
 	"github.com/SomeSuperCoder/OnlineShop/internal"
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
-	"github.com/SomeSuperCoder/OnlineShop/internal/redis/cart"
+	"github.com/SomeSuperCoder/OnlineShop/internal/redisclient"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
@@ -28,7 +28,7 @@ func (h *CartHandler) Get(ctx context.Context, input *struct{}) (*GetCartRespons
 	}
 
 	resp := new(GetCartResponse)
-	cartValue, err := cart.GetCart(ctx, h.RedisClient, claims.UUID)
+	cartValue, err := redisclient.GetCart(ctx, h.RedisClient, claims.UUID)
 	resp.Body.Cart = cartValue
 	return resp, err
 }
@@ -39,7 +39,7 @@ type AddItemToCartRequest struct {
 	}
 }
 type AddItemToCartResponse struct {
-	Body cart.CartModificationResult
+	Body redisclient.CartModificationResult
 }
 
 func (h *CartHandler) Post(ctx context.Context, input *AddItemToCartRequest) (*AddItemToCartResponse, error) {
@@ -49,7 +49,7 @@ func (h *CartHandler) Post(ctx context.Context, input *AddItemToCartRequest) (*A
 	}
 
 	resp := new(AddItemToCartResponse)
-	result, err := cart.AddItem(ctx, h.RedisClient, input.Body.Item, claims.UUID, h.AppConfig)
+	result, err := redisclient.AddItem(ctx, h.RedisClient, input.Body.Item, claims.UUID, h.AppConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ type RemoveItemFromCartRequest struct {
 	ID uuid.UUID `path:"id" format:"uuid"`
 }
 type RemoveItemFromCartResponse struct {
-	Body cart.CartModificationResult
+	Body redisclient.CartModificationResult
 }
 
 func (h *CartHandler) Delete(ctx context.Context, input *RemoveItemFromCartRequest) (*RemoveItemFromCartResponse, error) {
@@ -71,7 +71,7 @@ func (h *CartHandler) Delete(ctx context.Context, input *RemoveItemFromCartReque
 	}
 
 	resp := new(RemoveItemFromCartResponse)
-	result, err := cart.RemoveItem(ctx, h.RedisClient, input.ID, claims.UUID)
+	result, err := redisclient.RemoveItem(ctx, h.RedisClient, input.ID, claims.UUID)
 	if err != nil {
 		return nil, err
 	}

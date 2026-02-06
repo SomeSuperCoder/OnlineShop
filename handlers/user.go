@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
-	"github.com/SomeSuperCoder/OnlineShop/internal/redis/cart"
+	"github.com/SomeSuperCoder/OnlineShop/internal/redisclient"
 	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -71,7 +71,7 @@ func (h *UserHandler) Delete(ctx context.Context, input *UserDeleteRequest) (*Us
 		}
 
 		// Also delete the users cart
-		err := cart.DeleteCart(ctx, h.Redis, input.ID)
+		err := redisclient.DeleteCart(ctx, h.Redis, input.ID)
 		if err != nil {
 			return repository.DeleteUserRow{}, err
 		}
