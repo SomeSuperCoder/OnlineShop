@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	"github.com/SomeSuperCoder/OnlineShop/internal"
 	"github.com/SomeSuperCoder/OnlineShop/internal/middleware"
 	"github.com/SomeSuperCoder/OnlineShop/internal/redis/cart"
 	"github.com/google/uuid"
@@ -11,6 +12,7 @@ import (
 
 type CartHandler struct {
 	RedisClient *redis.Client
+	AppConfig   *internal.AppConfig
 }
 
 type GetCartResponse struct {
@@ -47,7 +49,7 @@ func (h *CartHandler) Post(ctx context.Context, input *AddItemToCartRequest) (*A
 	}
 
 	resp := new(AddItemToCartResponse)
-	result, err := cart.AddItem(ctx, h.RedisClient, input.Body.Item, claims.UUID)
+	result, err := cart.AddItem(ctx, h.RedisClient, input.Body.Item, claims.UUID, h.AppConfig)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/SomeSuperCoder/OnlineShop/internal"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
@@ -22,7 +23,7 @@ type CartModificationResult struct {
 	Added int64    `json:"added" description:"the amount of new entries added to the cart"`
 }
 
-func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID) (*CartModificationResult, error) {
+func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID, appConfig *internal.AppConfig) (*CartModificationResult, error) {
 	pipeline := rdb.TxPipeline()
 
 	key := GenerateCartKey(userUUID)
@@ -30,6 +31,7 @@ func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uu
 		Score:  0,
 		Member: item.String(),
 	})
+	expireCmd := pipeline.Expire(ctx, key, appConfig.UserCartExpiry)
 	getCmd := pipeline.ZRange(ctx, key, 0, -1)
 
 	_, err := pipeline.Exec(ctx)
@@ -40,6 +42,10 @@ func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uu
 	added, err := addCmd.Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to add a new item to cart: %w", err)
+	}
+
+	if expireCmd.Err() != nil {
+		return nil, fmt.Errorf("faild to set cart expiry: %w", err)
 	}
 
 	newCart, err := getCmd.Result()

@@ -20,6 +20,8 @@ type AppConfig struct {
 	// API stuff
 	Port     string `envconfig:"PORT"`
 	TestMode bool   `envconfig:"API_TEST"`
+	// User Experience
+	UserCartExpiry time.Duration `envconfig:"USER_CART_EXPIRY" default:"720h"`
 }
 
 func LoadAppConfig() *AppConfig {

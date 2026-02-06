@@ -132,7 +132,7 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 		}, reviewHandler.Delete)
 	}
 
-	cartHandler := handlers.CartHandler{RedisClient: redisClient}
+	cartHandler := handlers.CartHandler{RedisClient: redisClient, AppConfig: appConfig}
 	{
 		huma.Register(api, huma.Operation{
 			Method:  http.MethodGet,
