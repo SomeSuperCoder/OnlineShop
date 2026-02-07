@@ -178,4 +178,25 @@ func MountRoutes(api huma.API, repo *repository.Queries, pool *pgxpool.Pool, red
 			Summary: "Delete a user",
 		}, userHandler.Delete)
 	}
+	favoritesHandler := handlers.FavoritesHandler{RedisClient: redisClient, AppConfig: appConfig}
+	{
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodGet,
+			Path:    "/favorites",
+			Tags:    []string{"Favorites"},
+			Summary: "Get favorites for the current user",
+		}, favoritesHandler.Get)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodPost,
+			Path:    "/favorites",
+			Tags:    []string{"Favorites"},
+			Summary: "Add item to favorites",
+		}, favoritesHandler.Post)
+		huma.Register(api, huma.Operation{
+			Method:  http.MethodDelete,
+			Path:    "/favorites",
+			Tags:    []string{"Favorites"},
+			Summary: "Remove item from favorites",
+		}, favoritesHandler.Delete)
+	}
 }

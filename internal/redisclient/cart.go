@@ -18,9 +18,9 @@ func GetCart(ctx context.Context, rdb *redis.Client, userUUID uuid.UUID) ([]stri
 }
 
 type CartModificationResult struct {
-	Cart  []string `json:"cart"`
-	Len   int      `json:"len"`
-	Added int64    `json:"added" description:"the amount of new entries added to the cart"`
+	Cart      []string `json:"cart"`
+	Len       int      `json:"len"`
+	LenChange int64    `json:"len_change" description:"the amount of new entries added to or removed from the cart"`
 }
 
 func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID, appConfig *internal.AppConfig) (*CartModificationResult, error) {
@@ -54,9 +54,9 @@ func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uu
 	}
 
 	return &CartModificationResult{
-		Cart:  newCart,
-		Len:   len(newCart),
-		Added: added,
+		Cart:      newCart,
+		Len:       len(newCart),
+		LenChange: added,
 	}, nil
 }
 
@@ -72,7 +72,7 @@ func RemoveItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID
 		return nil, fmt.Errorf("failed to execute pipeline: %w", err)
 	}
 
-	added, err := removeCmd.Result()
+	removed, err := removeCmd.Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove item from cart: %w", err)
 	}
@@ -83,9 +83,9 @@ func RemoveItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID
 	}
 
 	return &CartModificationResult{
-		Cart:  newCart,
-		Len:   len(newCart),
-		Added: added,
+		Cart:      newCart,
+		Len:       len(newCart),
+		LenChange: removed,
 	}, nil
 }
 
