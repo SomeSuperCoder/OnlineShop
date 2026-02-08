@@ -70,8 +70,14 @@ func (h *UserHandler) Delete(ctx context.Context, input *UserDeleteRequest) (*Us
 			return repository.DeleteUserRow{}, AccessDeniedError
 		}
 
-		// Also delete the users cart
+		// Also delete the user's cart
 		err := redisclient.DeleteCart(ctx, h.Redis, input.ID)
+		if err != nil {
+			return repository.DeleteUserRow{}, err
+		}
+
+		// Also delete the user's favorites
+		err = redisclient.DeleteFavorites(ctx, h.Redis, input.ID)
 		if err != nil {
 			return repository.DeleteUserRow{}, err
 		}
