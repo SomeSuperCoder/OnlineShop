@@ -23,7 +23,7 @@ type CartModificationResult struct {
 	LenChange int64    `json:"len_change" description:"the amount of new entries added to or removed from the cart"`
 }
 
-func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID, appConfig *internal.AppConfig) (*CartModificationResult, error) {
+func AddItemToCart(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID, appConfig *internal.AppConfig) (*CartModificationResult, error) {
 	pipeline := rdb.TxPipeline()
 
 	key := GenerateCartKey(userUUID)
@@ -60,7 +60,7 @@ func AddItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uu
 	}, nil
 }
 
-func RemoveItem(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID) (*CartModificationResult, error) {
+func RemoveItemFromCart(ctx context.Context, rdb *redis.Client, item uuid.UUID, userUUID uuid.UUID) (*CartModificationResult, error) {
 	pipeline := rdb.TxPipeline()
 
 	key := GenerateCartKey(userUUID)

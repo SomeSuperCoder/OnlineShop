@@ -49,7 +49,7 @@ func (h *CartHandler) Post(ctx context.Context, input *AddItemToCartRequest) (*A
 	}
 
 	resp := new(AddItemToCartResponse)
-	result, err := redisclient.AddItem(ctx, h.RedisClient, input.Body.Item, claims.UUID, h.AppConfig)
+	result, err := redisclient.AddItemToCart(ctx, h.RedisClient, input.Body.Item, claims.UUID, h.AppConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (h *CartHandler) Delete(ctx context.Context, input *RemoveItemFromCartReque
 	}
 
 	resp := new(RemoveItemFromCartResponse)
-	result, err := redisclient.RemoveItem(ctx, h.RedisClient, input.ID, claims.UUID)
+	result, err := redisclient.RemoveItemFromCart(ctx, h.RedisClient, input.ID, claims.UUID)
 	if err != nil {
 		return nil, err
 	}
