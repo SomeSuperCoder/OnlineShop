@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/SomeSuperCoder/OnlineShop/internal"
@@ -18,18 +17,6 @@ const AuthClaimsContextKey = "claims"
 const TestUsername = "test-user"
 
 func GetClaimsFromContext(ctx context.Context) (*internal.Claims, error) {
-	val := ctx.Value(AuthClaimsContextKey)
-	log.Println(val)
-	valParsed, ok := val.(internal.Claims)
-	log.Println(ok)
-	log.Println(valParsed)
-
-	log.Println("BEGIN DEEP DIVE")
-	log.Printf("Type: %T", val)
-	log.Printf("Kind: %v", reflect.TypeOf(val).Kind())
-	log.Printf("VAlues: %+v", val)
-	log.Println("END DEEP DIVE")
-
 	if claims, ok := ctx.Value(AuthClaimsContextKey).(*internal.Claims); ok {
 		return claims, nil
 	} else {

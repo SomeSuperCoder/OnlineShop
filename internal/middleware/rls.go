@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/SomeSuperCoder/OnlineShop/repository"
 	"github.com/danielgtaylor/huma/v2"
@@ -24,14 +23,13 @@ func WithAuthContext[T any](ctx context.Context, pool *pgxpool.Pool, repo *repos
 	}
 
 	qtx := repo.WithTx(tx)
-	setConfigResult, err := qtx.SetConfig(ctx, repository.SetConfigParams{
+	_, err = qtx.SetConfig(ctx, repository.SetConfigParams{
 		UserID: claims.UUID.String(),
 	})
 	if err != nil {
 		logrus.Errorln("Failed to set config params")
 		return new(T), err
 	}
-	fmt.Printf("setConfigResult: %v\n", setConfigResult)
 
 	fResult, err := fn(ctx, qtx)
 	if err != nil {
